@@ -109,6 +109,86 @@ Storm中的Stream Groupings用于告知Topology如何在两个组件间（如Spo
 - 当需要在一个集群中把流计算和图计算、机器学习、SQL查询分析等进行结合时，可以选择Spark Streaming，因为，在Spark上可以统一部署Spark SQL，Spark Streaming、MLlib，GraphX等组件，提供便捷的一体化编程模型
 - 当应用场景需要毫秒级响应时，可以选择Storm，因为Spark Streaming无法实现毫秒级的流计算
 
+# 6 编写Storm程序
+-基于Storm的单词统计在形式上与基于MapReduce的单词统计是类似的，MapReduce使用的是Map和Reduce的抽象，而Storm使用的是Spout和Bolt的抽象
+## 程序任务：单词统计
+- Storm进行单词统计的整个流程：
+（1）从Spout中发送Stream（每个英文句子为一个Tuple）
+（2）用于分割单词的Bolt将接收的句子分解为独立的单词，将单词作为Tuple的字段名发送出去
+（3）用于计数的Bolt接收表示单词的Tuple，并对其进行统计
+（4）输出每个单词以及单词出现过的次数
+
+![一个句子经Storm的单词统计得出的结果][11]
+
+Storm的编程模型非常简单，如下代码即定义了整个单词统计Topology的整体逻辑
+```java
+import org.apache.storm.Config;
+Import ……
+public class WordCountTopology {
+	public  static class RandomSentenceSpout extends BaseRichSpout {
+		……
+	}
+	public static class SplitSentence extends ShellBolt implements IRichBolt {
+		……
+	}
+	public static class WordCount extends BaseBasicBolt {
+		……
+	}
+	public static void main(String[] args) throws Exception {
+		TopologyBuilder builder = new TopologyBuilder();
+		builder.setSpout("sentences", new RandomSentenceSpout(), 5);
+		builder.setBolt("split", new SplitSentence(), 8).shuffleGrouping("sentences");
+		builder.setBolt("count", new WordCount(), 12).fieldsGrouping("split", new Fields("word"));
+		……
+	}
+}
+```
+## main()函数中的处理逻辑
+
+![main()函数中的处理逻辑][12]
+
+Topology中仅定义了整体的计算逻辑，还需要定义具体的处理函数。具体的处理函数可以使用任一编程语言来定义，甚至也可以结合多种编程语言来实现
+
+### RandomSentenceSpout类
+```java
+//为简单起见，RandomSentenceSpout省略了类中的一些方法
+public class RandomSentenceSpout extends BaseRichSpout {
+	SpoutOutputCollector _collector;
+	Random _rand;
+	@Override
+	  public void nextTuple() {
+		Utils.sleep(100);
+		String[] sentences = new String[]{ "the cow jumped over the moon", "an apple a day keeps the doctor away",
+		        "four score and seven years ago", "snow white and the seven dwarfs", "i am at two with nature" };
+		String sentence = sentences[_rand.nextint(sentences.length)];
+		_collector.emit(new Values(sentence));
+	}
+	@Override
+	  public void declareOutputFields(OutputFieldsDeclarer declarer) {
+		declarer.declare(new Fields(“sentences"));
+  }
+}
+```
+### SplitSentence类
+- 如SplitSentence()方法虽然是通过Java语言定义的，但具体的操作可通过Python脚本来完成
+- Topology里面的每个组件必须定义它要发射的Tuple的每个字段
+
+![SplitSentence类][13]
+
+### splitsentence.py
+Python脚本splitsentence.py定义了一个简单的单词分割方法，即通过空格来分割单词。分割后的单词通过emit()方法以Tuple的形式发送给订阅了该Stream的Bolt进行接收和处理
+
+![splitsentence.py][14]
+### WordCount类 
+单词统计的具体逻辑：首先判断单词是否统计过，若未统计过，需先将count值置为0。若单词已统计过，则每出现一次该单词，count值就加1
+
+![WordCount类][15]
+
+上述虽然是一个简单的单词统计，但对其进行扩展，便可应用到许多场景中，如微博中的实时热门话题。Twitter也正是使用了Storm框架实现了实时热门话题
+
+![Twitter实时热门话题处理流程示意图][16]
+
+
   [1]: ./images/1508294473965.jpg
   [2]: ./images/1508294569869.jpg
   [3]: ./images/1508294704398.jpg
@@ -119,3 +199,9 @@ Storm中的Stream Groupings用于告知Topology如何在两个组件间（如Spo
   [8]: ./images/1508296082262.jpg
   [9]: ./images/1508296208499.jpg
   [10]: ./images/1508296278042.jpg
+  [11]: ./images/1508296784833.jpg
+  [12]: ./images/1508297142533.jpg
+  [13]: ./images/1508297471900.jpg
+  [14]: ./images/1508297560657.jpg
+  [15]: ./images/1508297594602.jpg
+  [16]: ./images/1508297712133.jpg
