@@ -1,0 +1,29 @@
+### 不要使用DRPC批量处理大数据
+
+批量处理大数据不是Storm设计的初衷，Strom考虑的是时效性和批量之间的均衡，更多地看中前者。需要准实时地处理大数据量，可以考虑Spark Stream等批量框架。
+
+### 不要在Spout中处理耗时的操作
+
+Spout中nextTuple方法会发射数据流，在启用Ack的情况下，fail方法和ack方法会被触发。需要明确一点的是在Storm中Spout是单线程（JStorm是3个线程）。如果nextTuple方法非常耗时，某个消息被成功执行完毕后，Acker会给Spout发送消息，Spout若无法及时消费，可能造成ACK消息超时后被丢弃，然后Spout反而认为这个消息执行失败了，造成逻辑错误，导致重发。
+
+## 不使用log4j日志
+
+Storm使用logback做日志输出，logback和log4j作为两套slf4j-api日志框架的实现，不能共同使用。如果在自定义的topology JAR中打包了log4j的相关JAR包，则会造成日志冲突，导致拓扑不能正常运行。正确的做法是把pom中关于log4j的包去掉。
+
+### 避免fieldGrouping造成的数据不均衡
+
+假设某个Bolt根据用户ID对数据进行fieldGrouping，如果某一些用户的数据特别多，而另一些用户的数据又比较少，那么可能使得下一级Bolt收到的数据不均衡，则整个处理的性能就受制于某些数据量大的节点。正确的做法是加入更多的分组条件或者更换分组策略，使得数据具有均衡性。
+
+### 优先使用localOrShuffleGrouping
+
+localOrShuffleGrouping是指如果目标Bolt中的一个或者多个Task和当前产生数据的Task在同一个Worker进程里面，那么就走内部的线程间通信，将Tuple直接发给在当前Worker进程的目的Task，否则，桶shuffleGrouping。
+
+### 设置合理的MaxSpoutPending
+
+假设如下的使用场景，将MaxSpoutPending值设置为1000，Topology处理完毕一个消息平均需要200ms，也就是Process latency为100ms（消息的emit和ack共耗时），Spout每次调用nextTuple为0.1ms。
+
+在上述场景下，Spout的最大发送速度能够达到多少呢？在不考虑ack方法和fail方法的性能消耗情况下，每个Spout Task可以理论发射速度为：1000/0.1=10000TPS。由于Topology处理完毕一个消息需要200ms，则这200ms时间会产生10000*0.2=2000个消息。2000已经大于MaxSpoutPending值，也就是说在100ms的时候，MaxSpoutPending值已经达到，会触发默认的等待策略，即休眠。因此要将MaxSpoutPending设置在2000以上。
+
+### GC参数优化
+
+可以对每个Worker的Java内存参数进行调整，配置在storm.yam的worker.childopts里。
