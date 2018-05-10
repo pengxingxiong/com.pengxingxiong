@@ -88,3 +88,80 @@ if __name__ == "__main__":
     print_func("word")
 ```
 这个时候再运行app.py时就正确了。不仅如此，也能发现idea编译器在`if __name__ == "__main__":`语句的前面产生了运行的按钮。
+
+## pip安装
+
+在无网络、只能使用root权限而无法用root账户的环境中安装pip方案：
+
+主要是使用网络代理，让当前用户能够访问网络：
+
+一般来说在可联网机器上应该配置好了代理账号和密码，例如nubia,nubia123。
+
+则当前用户则直接在命令行加入以下命令即可使得当前用户联网：
+
+```shell
+export http_proxy=http://root:nubia@123@10.206.19.180:3128
+export https_proxy=http://root:nubia@123@10.206.19.180:3128
+# 这里的特殊字符@会导致报错：Could not resolve proxy: 123@10.206.19.180; Unknown error
+# 该错误是密码中使用了@，因此需要对密码进行编码为：nubia%40123
+export http_proxy=http://root:nubia%40123@10.206.19.180:3128
+export https_proxy=http://root:nubia%40123@10.206.19.180:3128
+```
+
+然后可以使用curl命令来测试一下网络连接：
+
+```shell
+curl "www.baidu.com"
+```
+
+能够接受到该网址的html信息表示网络可联通。下面则进行安装pip，在[PyPa官网](https://pip.pypa.io/en/stable/installing/)可以将get-pip.py文件保存到指定位置，然后使用`python get-pip.py`命令即可安装pip，但是由于不是root账户会报错：
+
+```shell
+Collecting pip
+  Using cached https://files.pythonhosted.org/packages/0f/74/ecd13431bcc456ed390b44c8a6e917c1820365cbebcb6a8974d1cd045ab4/pip-10.0.1-py2.py3-none-any.whl
+Installing collected packages: pip
+  Found existing installation: pip 10.0.1
+    Uninstalling pip-10.0.1:
+      Successfully uninstalled pip-10.0.1
+  Rolling back uninstall of pip
+Could not install packages due to an EnvironmentError: [Errno 13] Permission denied: '/usr/lib/python2.7/site-packages/pip'
+Consider using the `--user` option or check the permissions.
+```
+
+主要是表示没有权限，因为python命令在`/usr/lib`下，并属于root用户。使用`sudo python get-pip.py`同样也会报错：
+
+```shell
+Collecting pip
+  Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.VerifiedHTTPSConnection object at 0x2798b50>: Failed to establish a new connection: [Errno -2] Name or service not known',)': /simple/pip/
+  Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.VerifiedHTTPSConnection object at 0x2798d10>: Failed to establish a new connection: [Errno -2] Name or service not known',)': /simple/pip/
+  Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.VerifiedHTTPSConnection object at 0x2798a50>: Failed to establish a new connection: [Errno -2] Name or service not known',)': /simple/pip/
+
+```
+
+该错误主要是网络连接失败，实际上通过`sudo curl "www.baidu.com"`也能发现该网址无法联通，说明对于root用户来说，无法使用代理。这时尝试使用以下命令来为root创建代理：
+
+```shell
+sudo export http_proxy=http://nubia:nubia123@10.206.19.180:3128
+sudo export https_proxy=http://nubia:nubia123@10.206.19.180:3128
+```
+
+发现报错：
+
+```shell
+sudo: export: command not found
+```
+
+最终想到一个办法：
+
+```shell
+sudo -E easy_install pip
+```
+
+`-E`命令表示采用当前用户的配置，也就是说让root用户使用当前有网络连接的方法。
+
+然后就能够使用pip了，使用方式为：
+
+```shell
+sudo -E pip install numpy
+```
+
