@@ -157,7 +157,7 @@ sudo: export: command not found
 sudo -E easy_install pip
 ```
 
-`-E`命令表示采用当前用户的配置，也就是说让root用户使用当前有网络连接的方法。
+`-E`命令表示采用当前用户的配置，也就是说让root用户使用当前有网络连接的方法。easy_install脚本则是linux自带的python已经安装好了的。
 
 然后就能够使用pip了，使用方式为：
 
