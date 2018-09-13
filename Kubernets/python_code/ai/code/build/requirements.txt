@@ -1,0 +1,8 @@
+pystan
+fbprophet
+pymongo
+scikit-learn==0.19
+pykafka
+scipy
+torch==0.3.1
+py4j

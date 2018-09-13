@@ -1,0 +1,12 @@
+CPU: '0.1'
+MEMORY: 2048Mi
+appname: bml-outline-predt
+command: /etc/bootstrap.sh
+configmap: asurrance-application-configmap
+image:
+  pullPolicy: Always
+  repository: harbor.mig.ruijie.net/rgibns-snapshot/assurance-ml
+  tag: 1.0-SNAPSHOT
+pyspark_python: 'null'
+schedule: '*/10 * * * *'
+submit: python3 /home/ibns/code/outLinePredt/outLineBwPredt.py

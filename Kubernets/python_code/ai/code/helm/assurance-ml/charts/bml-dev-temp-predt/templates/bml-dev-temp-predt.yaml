@@ -1,0 +1,41 @@
+---
+apiVersion: batch/v2alpha1
+kind: CronJob
+metadata:
+  name: {{ .Values.appname }}
+  namespace: {{ .Values.global.namespace }}
+spec:
+  schedule: "{{ .Values.schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: {{ .Values.appname }}
+            image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            env:
+              - name: TZ
+                value: "Asia/Shanghai"
+              - name: PYSPARK_PYTHON
+                value: {{ .Values.pyspark_python }}
+            command: ["{{ .Values.command }}"]
+            args: ["{{ .Values.submit }} >> /home/ibns/log/{{ .Values.appname }}/{{ .Values.appname }}.logs && sleep 2" ]
+            volumeMounts:
+            - name: log-dir
+              mountPath: /home/ibns/log/{{ .Values.appname }}
+            - name: time
+              mountPath: /etc/localtime
+              readOnly: true
+            resources:
+              requests:
+                cpu: {{ .Values.CPU }}
+                memory: {{ .Values.MEMORY }}
+          volumes:
+            - name: log-dir
+              hostPath:
+                path: /ibnsdata/ml-center/log/{{ .Values.appname }}
+            - name: time
+              hostPath:
+                path: /etc/localtime
+          restartPolicy: Never

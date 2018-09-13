@@ -30,11 +30,12 @@ clean package
 <version>1.0.4.RELEASE</version>
 ```
 ## 上传命令
-idea：deploy
+idea编译器：deploy
 ## 重复上传
 当再次上传相同版本的包时，需要到仓库中删除原有包
 例如上面配置中的：http://10.206.19.205:8081/nexus
 选中jar包，然后删除即可再次上传。
+
 ## 报错
 上传最好不要有父模块依赖。
 ## 其他上传

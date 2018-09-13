@@ -424,3 +424,65 @@ Tolerations:	node.alpha.kubernetes.io/notReady:NoExecute for 300s
 Events:		<none>
 ```
 
+# 数据拓扑图
+
+## 组件
+
+从MetricsUtil类来看
+
+包括的组件有
+
+- PipelineComponent
+- AnalyticPipelineComponent
+- CollectorComponent
+- BusComponent
+- StoreComponent
+
+
+
+# 运行时环境
+
+有一个Runtime类专门获取系统，k8s等环境变量
+
+# influxDB
+
+```sh
+curl -GET 'http://10.1.3.61:8086/query' --data-urlencode "q=show databases"
+{"results":[{"statement_id":0,"series":[{"name":"databases","columns":["name"],"values":[["k8s"],["telegraf"],["_internal"]]}]}]}
+```
+
+可以看到有两个数据库，现在到处k8s的表
+
+```sh
+curl -GET 'http://10.1.3.61:8086/query?db=k8s' --data-urlencode "q=show measurements" > k8s.json
+```
+
+## k8s
+
+
+
+## telegraf
+
+采集的数据包括
+
+- **cpu**
+- **elasticsearch**
+- **influxdb**
+- **kafka**
+- **mongodb**
+- **postgresql**
+- **prom_kube**
+  - cronjob
+  - daemonset
+  - deployment
+  - job
+  - namespace
+  - node
+  - persistentvolumeclaim
+  - pod
+  - replicaset
+  - service
+  - statefulset
+  - rabbitmq
+  - redis
+

@@ -1,0 +1,12 @@
+CPU: '0.1'
+MEMORY: 2048Mi
+appname: bml-dev-temp-predt
+command: /etc/bootstrap.sh
+configmap: asurrance-application-configmap
+image:
+  pullPolicy: Always
+  repository: harbor.mig.ruijie.net/rgibns-snapshot/assurance-ml
+  tag: 1.0-SNAPSHOT
+pyspark_python: /usr/local/bin/python3
+schedule: '*/10 * * * *'
+submit: spark-submit /home/ibns/code/tempPredt/devTempPredt.py

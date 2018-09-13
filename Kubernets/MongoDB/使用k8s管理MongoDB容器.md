@@ -1,7 +1,3 @@
-# 部署Kubernets集群
-
-
-
 # 部署MongoDB组件
 
 ## 创建MongoDB容器化组件
@@ -1169,6 +1165,12 @@ kubectl get deployment | grep ionc-mongodb | awk '{print $1}' | xargs kubectl de
 kubectl get job | grep ionc-mongodb | awk '{print $1}' | xargs kubectl delete job
 kubectl get cronjob | grep ionc-mongodb | awk '{print $1}' | xargs kubectl delete cronjob
 ```
+
+在删除完pod之后有一个非常重要的事情：**是否要清空数据？**
+
+**因为版本问题，初始化重复的索引问题都会导致再次部署失败，因此清空挂载目录很重要。**
+
+**但是如果是只是版本升级的话，初始化表时候会插入数据，这个时候可以考虑忽略一些重复索引的问题，不影响最终的部署效果。**
 
 如果是由于MongoDB版本问题导致的，可以清空MongoDB的挂载目录。
 

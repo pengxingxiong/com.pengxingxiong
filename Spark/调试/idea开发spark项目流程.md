@@ -674,3 +674,6 @@ def initParams(params: Start.Params): Unit = {
 
 更加完善的功能则直接参考GitHub中关于scopt的官方说明。
 
+# 系统找不到指定路径
+
+ 这次错误导致的原因是在win7的环境变量中发现了JAVA_HOME有问题，值为`JAVA_HOME=C:\Program Files\Java\jdk1.8.0_171\bin`，然后Path路径中有`%JAVA_HOME%\bin`，也就是说bin写了两次。删除`JAVA_HOME`中的bin即可修改错误。

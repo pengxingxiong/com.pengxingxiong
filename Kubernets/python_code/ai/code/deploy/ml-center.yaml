@@ -1,0 +1,35 @@
+---
+apiVersion: batch/v2alpha1
+kind: CronJob
+metadata:
+  name: ml-center
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template: 
+        spec: 
+          nodeSelector:
+            node: "1"
+          containers:
+          - name: ml-center
+            image: harbor.mig.ruijie.net/rgibns-snapshot/ml-center:1.0
+            env:
+              - name: TZ
+                value: "Asia/Shanghai"
+            command: ["/etc/bootstrap.sh"]
+            args: ["spark-submit /home/ibns/code/tempPredt/devTempPredt.py >> /home/ibns/code/logs && sleep 3600" ]
+            volumeMounts:
+            - name: code
+              mountPath: /home/ibns/code
+            - name: time
+              mountPath: /etc/localtime
+              readOnly: true
+          volumes:
+            - name: code
+              hostPath:
+                path: /ibnsdata/ml-center/code
+            - name: time
+              hostPath:
+                path: /etc/localtime
+          restartPolicy: Never

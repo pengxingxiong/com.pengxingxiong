@@ -1,0 +1,32 @@
+# Default values for mscp-base.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+global:
+  namespace: assurance
+  cluster:
+    IP1: 172.24.26.66
+    IP2: 172.24.26.67
+    IP3: 172.24.26.68
+    NODE1_HOSTNAME: rgibns1
+    NODE2_HOSTNAME: rgibns2
+    NODE3_HOSTNAME: rgibns3
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

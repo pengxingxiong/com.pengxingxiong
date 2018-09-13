@@ -89,7 +89,7 @@ if __name__ == "__main__":
 ```
 这个时候再运行app.py时就正确了。不仅如此，也能发现idea编译器在`if __name__ == "__main__":`语句的前面产生了运行的按钮。
 
-## pip安装
+# pip安装
 
 在无网络、只能使用root权限而无法用root账户的环境中安装pip方案：
 
@@ -164,4 +164,52 @@ sudo -E easy_install pip
 ```shell
 sudo -E pip install numpy
 ```
+
+## 下载超时
+
+出现pip安装时ReadTimeoutError，一般情况下PIP出现ReadTimeoutError都是因为被GFW给墙了，所以一般遇到这种问题，我们可以选择国内的镜像来解决问题。
+
+```sh
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pykafka
+```
+
+使用该方法可以加快下载，另外一种方式是延长等待时间：
+
+```sh
+pip --default-timeout=100 install -U pip
+```
+
+## 按照列表下载
+
+为了部署起来更加方便，应该使用`pip install -r requirements.txt方式批量下载`，文档格式如下：
+
+```sh
+pystan
+fbprophet
+pymongo
+scikit-learn==0.19
+pykafka>=2.7.0
+```
+
+# 安装fbprophet
+
+使用pip命令安装fbprophet：
+
+```sh
+pip3 install fbprophet
+```
+
+报错为：
+
+```sh
+UnicodeDecodeError: 'utf8' codec can't decode byte 0xd5
+```
+
+并且提示了`C:\Program Files\python3.x\Lib\site-packages\pip\compat\__init.py`第75行的`return s.decode('utf_8')`有问题。解决方式为：
+
+将该代码改成`return s.decode('gbk')`
+
+再次执行安装命令，报错为
+
+![1536832824098](assets/1536832824098.png)
 
