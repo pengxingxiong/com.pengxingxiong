@@ -1,0 +1,6 @@
+fbprophet
+pymongo
+scikit-learn==0.19
+pykafka
+scipy
+py4j
