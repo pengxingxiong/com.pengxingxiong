@@ -101,3 +101,10 @@ print os.path.abspath(os.path.join(os.getcwd(), "../.."))12345678910111213
 /workspace/demo
 ```
 
+# 找不到模块
+
+报错为`ImportError: cannot import name 'KafkaConsumer'`，网上资料显示为：
+
+![1539568390280](assets/1539568390280.png)
+
+发现错误是将文件名写成了kafka.py，和kafka的库重复了。

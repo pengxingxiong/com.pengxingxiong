@@ -1,4 +1,12 @@
+---
+title: SparkSQL语法分析
+date: 2018-10-23 13:58:15
+tags: spark
+---
 
+介绍SparkSQL的较为复杂的语法以及操作
+
+<!--more-->
 
 # DataFrame & array
 
@@ -46,6 +54,8 @@ input_df.selectExpr("inline(items)", "ts").show(10, False)
 
 可以看出，array数据已经按照元素展开了。
 
+注意，该函数仅能够展开struct类型的数组，而基本类型的数组则报错，例如`array<timestamp>`就不行
+
 ### explode
 
 ```sh
@@ -57,7 +67,7 @@ input_df.selectExpr("explode(items)", "ts", "count")
 
 ![1536755219033](assets/1536755219033.png)
 
-可以看到，array数据被铺平了，但是列名是col，而不是像上面一样的多个列
+可以看到，array数据被铺平了，但是列名是col，而不是像上面一样的多个列，但是能够专门针对基本类型的数组。
 
 # posexplode
 
@@ -106,5 +116,72 @@ df.groupBy("vkey").agg(functions.expr("count(DISTINCT ts) as ts_count"))
 
 这种方法的好处是可以自定义列名。
 
-# 更新DataFrame
+# 合并
 
+## 合并列
+
+```python
+    res_df1 = res_df.select("_id", "count", functions.struct("devices", "inOctets", "octets", "outLineName", "outOctets")
+```
+
+## 合并行
+
+```python
+res_df2 = res_df1.groupBy("_id").agg(functions.expr("collect_list(item) as items"))
+```
+
+
+
+# udf
+
+在pyspark中使用udf和scala有些不同，这个不同会有性能影响。
+
+方式一：
+
+```python
+def string2Vectors(features_str: str):
+  features = features_str[51:-2].split(",")
+  result = {}
+  for i in range(len(features)):
+    result[i] = float(features[i])
+    vector = Vectors.sparse(18, result)
+    return vector
+# 性能评估
+startTime = time.time()
+string2VectorsUdfs = functions.udf(Offline.string2Vectors, VectorUDT())
+data = df.withColumn("features", string2VectorsUdfs(df["features"])).select("label", "features")
+print(data.rdd.count())
+endTime = time.time()
+print("readDataTime = %s" % (endTime - startTime))
+```
+
+方式二：
+
+```python
+@udf(returnType=VectorUDT())
+def string2Vectors(features_str: str):
+    features = features_str[51:-2].split(",")
+    result = {}
+    for i in range(len(features)):
+        result[i] = float(features[i])
+    vector = Vectors.sparse(18, result)
+    return vector
+# 性能评估
+startTime = time.time()
+data = df.select("label", string2Vectors("features").alias("features"))
+print(data.rdd.count())
+endTime = time.time()
+print("readDataTime = %s" % (endTime - startTime))
+```
+
+为了比较他们的消耗，使用一个shuffle流程（实际上应该避免shuffle）来判断耗时，代码中使用了`data.rdd.count()`。
+
+方式一的运行结果为:
+
+![1](assets/1.png)
+
+方式一出现了shuffle过程。方式二的运行结果为：
+
+![2](assets/2.png)
+
+在相同的资源条件下，方式一明显用时超过了方式二。而从scala版本的udf来看，使用方式一也是没有shuffle过程的。
