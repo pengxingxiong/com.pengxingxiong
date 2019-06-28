@@ -1,38 +1,25 @@
 ## 安装基础环境（JAVA和SCALA环境）
 
-### Java1.8环境搭建：
-
-配置master的java环境
+### 环境准备
 
 ```sh
-#下载jdk1.8的rpm包
-wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.rpm 
-rpm -ivh jdk-8u112-linux-x64.rpm 
-
-#增加JAVA_HOME
-vim etc/profile
-
-#增加如下行：
-#Java home
-export JAVA_HOME=/usr/java/jdk1.8.0_112/
-export PATH=$PATH:$JAVA_HOME/bin
-export CLASSPATH=$CLASSPATH::$JAVA_HOME/lib/
-#刷新配置：
-source /etc/profile #当然reboot也是可以的
+#在三个节点的/etc/hosts文件中存在以下三个host配置，组成集群
+rgibns1
+rgibns2
+rgibns3
 ```
 
-配置workerN主机的java环境
 
-```sh
-#使用scp命令进行拷贝
-scp jdk-8u112-linux-x64.rpm root@workerN:/root
 
-#其他的步骤如master节点配置一样
-```
+###获取安装文件
 
- 
+**默认和大数据有关的安装都在/opt目录下。**
 
-### Scala2.11.12环境搭建：
+#### java
+
+从官方下载jdk的Linux版本，如`jdk-8u181-linux-x64.tar.gz`
+
+#### scala
 
 在下载时遇到一些问题，首先进入官网后：选择一个版本
 
@@ -52,92 +39,111 @@ http://downloads.typesafe.com/scala/2.11.12/scala-2.11.12.tgz
 
 而且下载速度很快。
 
-Master节点：
+
+
+####hadoop
 
 ```sh
-#下载scala安装包：
-wget -O "scala-2.12.2.rpm" "https://downloads.lightbend.com/scala/2.12.1/scala-2.12.2.rpm"
+wget http://www-eu.apache.org/dist/hadoop/common/hadoop-2.7.5/hadoop-2.7.5.tar.gz
+```
 
-#安装rpm包：
-rpm -ivh scala-2.12.2.rpm
+尽可能下载最新版本
 
-#增加SCALA_HOME
+### 解压文件
+
+#### java
+
+在三个节点中执行
+
+```sh
+tar -zxf jdk-8u181-linux-x64.tar.gz
+```
+
+#### scala
+
+在三个节点中执行
+
+```sh
+tar -xzf scala-2.11.12.tgz
+```
+
+#### hadoop
+
+在主节点rgibns1执行
+
+```sh
+tar -xzf hadoop-2.7.5.tar.gz
+```
+
+#### 创建软链接
+
+解压完压缩包后，可以选择创建软连接，减少因为版本变更造成的改动，示例
+
+```shell
+# 注意：要指定好目录关系
+ln -s jdk1.8.0_181 java
+ln -s scala-2.11.12 scala
+ln -s hadoop-3.1.2 hadoop
+```
+
+
+
+### 配置环境变量
+
+```sh
 vim /etc/profile
-
-#增加如下内容;
-#Scala Home
-export SCALA_HOME=/usr/share/scala
+#在文件末尾追加以下内容
+# java，注意JAVA_HOME与实际一致
+export JAVA_HOME=/opt/java
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=$CLASSPATH::$JAVA_HOME/lib/
+# scala，注意SCALA_HOME与实际一致
+export SCALA_HOME=/opt/scala
 export PATH=$PATH:$SCALA_HOME/bin
-#刷新配置
-source /etc/profile
-```
-
-WorkerN节点;
-
-```sh
-#使用scp命令进行拷贝
-scp scala-2.12.2.rpm root@workerN:/root
-
-#其他的步骤如master节点配置一样
-```
-
- 
-
-## MASTER节点
-
-### 下载二进制包
-
-```sh
-wget http://www-eu.apache.org/dist/hadoop/common/hadoop-2.7.3/hadoop-2.7.3.tar.gz
-```
-
-### 解压并移动至相应目录
-
-```sh
-tar -xvf hadoop-2.7.3.tar.gz
-mv hadoop-2.7.3 /opt
-```
-
-### 修改相应的配置文件
-
-#### （1）/etc/profile：
-
-增加如下内容：
-
-```sh
-#hadoop enviroment 
-export HADOOP_HOME=/opt/hadoop-2.7.3/
+# hadoop，注意HADOOP_HOME与实际一致
+export HADOOP_HOME=/opt/hadoop
 export PATH="$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH"
 export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop
 ```
 
-然后载入一下
+最后shi环境变量生效
 
 ```sh
 source /etc/profile
 ```
 
-
-
-#### （2）$HADOOP_HOME/etc/hadoop/hadoop-env.sh
-
-修改JAVA_HOME 如下：
+验证java和scala
 
 ```sh
-export JAVA_HOME=/opt/jdk1.8.0_181
+java -version
+scala -version
+```
+
+###hadoop配置
+
+#### $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+
+**修改**JAVA_HOME 如下：
+
+```sh
+export JAVA_HOME=/opt/java
 ```
 
 重要，这个必须要修改。
 
-#### （3）$HADOOP_HOME/etc/hadoop/slaves
+#### $HADOOP_HOME/etc/hadoop/slaves
 
 ```sh
-worker1
-worker2
+# 该文件默认有个localhost，这里为了可以仅将主节点作为Master，不用于存数据，可以删除localhost
+rgibns1
+rgibns2
+rgibns3
 ```
 
-#### （4）$HADOOP_HOME/etc/hadoop/core-site.xml
+注意，如果是hadoop3.x，那么这个文件应该是$HADOOP_HOME/etc/hadoop/workers
+
+#### $HADOOP_HOME/etc/hadoop/core-site.xml
 
 ```xml
 <configuration>
@@ -151,12 +157,14 @@ worker2
     </property>
     <property>
         <name>hadoop.tmp.dir</name>
-        <value>/opt/hadoop-2.7.5/tmp</value>
+        <value>/opt/hadoop/tmp</value>
     </property>
 </configuration>
 ```
 
-#### （5）$HADOOP_HOME/etc/hadoop/hdfs-site.xml
+#### $HADOOP_HOME/etc/hadoop/hdfs-site.xml
+
+注意：如果是单机节点，请修改secondary配置为主节点名称和replication配置为1
 
 ```xml
 <configuration>
@@ -170,21 +178,21 @@ worker2
     </property>
     <property>
         <name>dfs.namenode.name.dir</name>
-        <value>file:/opt/hadoop-2.7.5/hdfs/name</value>
+        <value>file:/opt/hadoop/hdfs/name</value>
     </property>
     <property>
         <name>dfs.datanode.data.dir</name>
-        <value>file:/opt/hadoop-2.7.5/hdfs/data</value>
+        <value>file:/opt/hadoop/hdfs/data</value>
     </property>
 </configuration>
 ```
 
-#### （6）$HADOOP_HOME/etc/hadoop/mapred-site.xml
+#### $HADOOP_HOME/etc/hadoop/mapred-site.xml
 
 复制template，生成xml：
 
 ```sh
-cp mapred-site.xml.template mapred-site.xml
+cp $HADOOP_HOME/etc/hadoop/mapred-site.xml.template $HADOOP_HOME/etc/hadoop/mapred-site.xml
 ```
 
 内容：
@@ -206,7 +214,7 @@ cp mapred-site.xml.template mapred-site.xml
 </configuration>
 ```
 
-#### （7）$HADOOP_HOME/etc/hadoop/yarn-site.xml
+#### $HADOOP_HOME/etc/hadoop/yarn-site.xml
 
 ```xml
 <configuration>
@@ -240,6 +248,13 @@ cp mapred-site.xml.template mapred-site.xml
 
 至此master节点的hadoop搭建完毕
 
+然后将master节点的文件复制到各个从节点
+
+```sh
+scp -r hadoop-2.7.5 root@rgibns2:/opt
+scp -r hadoop-2.7.5 root@rgibns3:/opt
+```
+
 再启动之前我们需要
 
 格式化一下namenode
@@ -248,15 +263,112 @@ cp mapred-site.xml.template mapred-site.xml
 hadoop namenode -format
 ```
 
+#### 配置GPU
+
+从样例创建一个文件
+
+```shell
+cp mapred-site.xml resource-types.xml
+```
+
+在resource-types.xml中删除`<configuration>..</configuration>`的内容，并加入以下内容
+
+```xml
+<configuration>
+  <property>
+     <name>yarn.resource-types</name>
+     <value>yarn.io/gpu</value>
+  </property>
+</configuration>
+```
+
+修改capacity-scheduler.xml中的yarn.scheduler.capacity.resource-calculator参数为org.apache.hadoop.yarn.util.resource.DominantResourceCalculator。
+
+```xml
+  <property>
+    <name>yarn.scheduler.capacity.resource-calculator</name>
+    <value>org.apache.hadoop.yarn.util.resource.DominantResourceCalculator</value>
+    <description>
+      ...
+    </description>
+  </property>
+```
+
+在yarn-site.xml文件中加入以下内容
+
+```xml
+</configuration>
+    <!-- 自动发现GPU -->
+    <property>
+        <name>yarn.nodemanager.resource-plugins</name>
+        <value>yarn.io/gpu</value>
+    </property>
+</configuration>
+```
+
+启动yarn后访问如下网址http://172.18.130.34:8088/cluster/apps，结果为：
+
+![1560344472473](assets/1560344472473.png)
+
+
+
+#### 其他
+
+如果是hadoop3.x还需要配置如下信息
+
+将`$HADOOP_HOME/sbin/start-dfs.sh，$HADOOP_HOME/sbin/stop-dfs.sh`两个文件顶部添加以下参数
+
+```shell
+HDFS_DATANODE_USER=root
+# 安全配置可以不要
+#HADOOP_SECURE_DN_USER=hdfs
+HDFS_NAMENODE_USER=root
+HDFS_SECONDARYNAMENODE_USER=root
+```
+
+`$HADOOP_HOME/sbin/start-yarn.sh，$HADOOP_HOME/sbin/stop-yarn.sh`顶部也需添加以下
+
+```shell
+YARN_RESOURCEMANAGER_USER=root
+# 安全配置可以不要
+#HADOOP_SECURE_DN_USER=yarn
+YARN_NODEMANAGER_USER=root
+```
+
+
+
  # 启动集群
 
 ```sh
-/opt/hadoop-2.7.3/sbin/start-all.sh
+# 启动hadoop
+/opt/hadoop/sbin/start-all.sh
 /opt/spark-2.1.0-bin-hadoop2.7/sbin/start-all.sh
+# 或仅启动hdfs
+/opt/hadoop/sbin/start-dfs.sh
+# 使用jps命令查看相应进程
 jps
 ```
 
 ![1538031111194](assets/1538031111194.png)
+
+或者通过web访问：
+
+```http
+http://rgibns1:50070/dfshealth.html#tab-overview
+```
+
+如果是hadoop3.x，那么hdfs的端口有变更
+
+hdfs:172.18.135.131:9870
+
+如果安装失败，需要删除tmp目录的内容
+
+```shell
+rm tmp/ -rf
+rm hdfs/data/ hdfs/name/ -rf
+```
+
+
 
 # 关闭集群
 
@@ -332,3 +444,34 @@ if __name__ == "__main__":
 /opt/spark-2.3.1-bin-hadoop2.7/bin/spark-submit --master yarn --class com.ruijie.batch.Test assurance.ml.scala-0.9.1-dev-20180927083553.jar
 ```
 
+# FAQ
+
+提交任务到yarn时出现以下问题：
+
+```shell
+2019-06-12 20:52:02,032 ERROR client.TransportClient: Failed to send RPC RPC 6023759164461043573 to /172.18.130.34:48178: java.nio.channels.ClosedChannelException
+java.nio.channels.ClosedChannelException
+	at io.netty.channel.AbstractChannel$AbstractUnsafe.write(...)(Unknown Source)
+```
+
+可以从nodeManager.log中找到一个警告：
+
+```shell
+2019-06-12 20:52:00,667 WARN org.apache.hadoop.yarn.server.nodemanager.containermanager.monitor.ContainersMonitorImpl: Container [pid=5804,containerID=container_1560343815404_0001_01_000001] is running 244705792B beyond the 'VIRTUAL' memory limit. Current usage: 383.7 MB of 1 GB physical memory used; 2.3 GB of 2.1 GB virtual memory used. Killing container.
+```
+
+表示虚拟内存不足，解决方法是：
+
+在etc/hadoop/yarn-site.xml文件中，修改检查虚拟内存的属性为false，如下：
+
+```xml
+<configuration>
+    <!-- 关闭虚拟内存默认为2.1GB的检查 -->
+    <property>
+        <name>yarn.nodemanager.vmem-check-enabled</name>
+        <value>false</value>
+    </property>
+</configuration>
+```
+
+然后重启yarn服务。

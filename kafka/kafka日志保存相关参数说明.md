@@ -23,3 +23,4 @@ kafka chart包对应参数：
 3、鉴于第二点提出的风险，在不清楚数据量的情况下，基础版本将kafka_log_retention_bytes的值设为“-1”。
 4、对于不同环境可根据实际数据量及磁盘容量设置kafka_log_retention_bytes。
 5、若需修改kafka_log_retention_bytes，需开svn分支进行版本管理
+

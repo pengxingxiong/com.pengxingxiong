@@ -29,3 +29,4 @@
   ${project.artifactId}-${project.version}_${maven.build.timestamp}
 </finalName>
 ```
+

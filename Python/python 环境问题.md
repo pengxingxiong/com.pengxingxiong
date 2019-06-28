@@ -213,3 +213,39 @@ UnicodeDecodeError: 'utf8' codec can't decode byte 0xd5
 
 ![1536832824098](assets/1536832824098.png)
 
+# PySpark问题
+
+报错如下：
+
+```shell
+19/05/14 19:15:34 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+Exception in thread "main" java.io.IOException: Cannot run program "": error=2, No such file or directory
+	at java.lang.ProcessBuilder.start(ProcessBuilder.java:1048)
+	at org.apache.spark.deploy.PythonRunner$.main(PythonRunner.scala:100)
+	at org.apache.spark.deploy.PythonRunner.main(PythonRunner.scala)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.spark.deploy.JavaMainApplication.start(SparkApplication.scala:52)
+	at org.apache.spark.deploy.SparkSubmit$.org$apache$spark$deploy$SparkSubmit$$runMain(SparkSubmit.scala:894)
+	at org.apache.spark.deploy.SparkSubmit$.doRunMain$1(SparkSubmit.scala:198)
+	at org.apache.spark.deploy.SparkSubmit$.submit(SparkSubmit.scala:228)
+	at org.apache.spark.deploy.SparkSubmit$.main(SparkSubmit.scala:137)
+	at org.apache.spark.deploy.SparkSubmit.main(SparkSubmit.scala)
+Caused by: java.io.IOException: error=2, No such file or directory
+	at java.lang.UNIXProcess.forkAndExec(Native Method)
+	at java.lang.UNIXProcess.<init>(UNIXProcess.java:247)
+	at java.lang.ProcessImpl.start(ProcessImpl.java:134)
+	at java.lang.ProcessBuilder.start(ProcessBuilder.java:1029)
+	... 12 more
+19/05/14 19:15:34 INFO ShutdownHookManager: Shutdown hook called
+19/05/14 19:15:34 INFO ShutdownHookManager: Deleting directory /tmp/spark-a2817854-055a-460d-b081-29bee61889e8
+```
+
+从[StackOverflow网站](https://stackoverflow.com/questions/54570555/exception-in-thread-main-java-io-ioexception-cannot-run-program-error-2)的提问来看解决方案是：导入PYSPARK_PYTHON配置，将自己的python路径导入。
+
+```shell
+export PYSPARK_PYTHON= /usr/local/bin/python3
+```
+

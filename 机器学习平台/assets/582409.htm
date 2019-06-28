@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+    <title>使用TensorFlow构建LSTM模型详细教程 - 51CTO.COM</title>
+    <meta name="description" content="本文的目标是解释一个可用于构建基本LSTM模型的简单代码。我不会讨论和分析结果。这只是为了让您开始编写代码。"/>
+    <meta name="keywords" content="编程语言,Python,机器学习"/>
+    <base target="_blank" />
+    <link rel="stylesheet" type="text/css" href="https://static2.51cto.com/51cto/cms/2016/css/article_head.css?v=0.2"/>
+    <link rel="stylesheet" type="text/css" href="https://static3.51cto.com/51cto/cms/2016/css/article_layout.css?v=2.19"/>
+    <link rel="stylesheet" type="text/css" href="https://static2.51cto.com/51cto/cms/2016/css/article_right.css"/>
+    <script type="text/javascript" src="https://static1.51cto.com/libs/jquery/1.8.3/jquery.min.js"></script>
+    <style type="text/css">
+        .clearfix{*zoom:1;}
+        .clearfix:after{content:'\0020';display:block;height:0;font-size:0;line-height:0;clear:both;overflow:hidden}
+    </style>
+</head>
+<body >
+<!--From Stor Https Trans Test-->
+<!-- 导航 开始-->
+<!-- top start -->
+<style>
+    .home-top .subweb .sub_widthAuto{width:auto;}
+    .top-nav .nav li .topnavA_zxf{width:194px;left:-60px;}
+    .top-nav .topnavA_zxf a{padding: 0 10px;}
+    .top-nav .nav li:hover .topnavA_zxf a{width:auto;text-indent:inherit;}
+    .zxf_menubot{background:#F4F4F4;padding:15px 20px 0;border-top:4px solid #be0000;font-size:14px;}
+    .zxf_menubot a{padding:0;}
+    .zxf_menubot dl{margin-right:48px;_margin-right:40px;*margin-right:40px;}
+    .zxf_menubot .nmr{margin-right:0;}
+    .zxf_menubot dt,.zxf_menubot dd{float:left;}
+    .zxf_menulist li{float:left;text-align:left;margin-right:20px;}
+    .zxf_menulist a{display:block;margin-bottom:10px;}
+    .zxf_menulist li.nmr{margin-right:0;}
+    .zxf_menu_ico{width:28px;margin-right:20px;text-align:center;color:#666;}
+    .zxf_menu_ico img{display:block;margin:10px auto 10px;}
+    .redNav{color:#be0000;}
+    .subweb-list .navcodebox{ width:410px; left:-225px; padding:20px 15px;}
+    .subweb-list .navcodebox span{ width:136px;display:inline-block; float:left; text-align:center; color:#747474; font-size:13px; }
+    .subweb-list .navcodebox span p{ padding-top: 10px;color:#333;}
+
+    .rmzw_xx li a {
+        float: left;
+        font-size: 16px;
+        height: 23px;
+        line-height: 23px;
+        overflow: hidden;
+        width: 95%;
+    }
+    .rmzw_xx li span.ico {
+        background: rgba(0, 0, 0, 0) url("https://s2.51cto.com/wyfs02/M02/98/D8/wKiom1lBBebwbP2OAAAAuOBywqs269.png") no-repeat scroll left center;
+        float: left;
+        height: 22px;
+        line-height: 22px;
+        width: 15px;
+    }
+
+    .rmzw_xx li {
+        border-bottom: 1px dotted #ccc;
+        float: left;
+        margin-top: 6px;
+        padding: 5px 0;
+        width: 100%;
+    }
+
+    .ctoll1 dd a {
+        color: #343434;
+        float: left;
+        font-family: "Microsoft YaHei";
+        font-size: 14px;
+        padding: 15px 19px 0;
+    }
+</style>
+<div class="home-top" id="topx">
+    <div class="w1001 cent">
+        <div class="pdr10 fl"><a href="//www.51cto.com/">51CTO首页</a></div>
+        <div class="pdr10 fl">|</div>
+        <div class="pdr10 fl">
+            <div class="subweb"><span class="trans">技术频道</span><i></i>
+                <div class="subweb-list" style="width: 90px; top: 37px;">
+                    <a href="//ai.51cto.com/" target="_blank">人工智能</a>
+                    <a href="//cloud.51cto.com/" target="_blank">云计算</a>
+                    <a href="//bigdata.51cto.com/" target="_blank">大数据</a>
+                    <a href="//network.51cto.com/" target="_blank">网络</a>
+                    <a href="//developer.51cto.com/" target="_blank">开发</a>
+                    <a href="//netsecurity.51cto.com/" target="_blank">安全</a>
+                    <a href="//os.51cto.com/" target="_blank">系统</a>
+                    <a href="//mobile.51cto.com/" target="_blank">移动</a>
+                    <a href="//server.51cto.com/" target="_blank">服务器</a>
+                </div>
+            </div>
+        </div>
+        <div class="pdr10 fl">|</div>
+        <div class="pdr10 fl">
+            <div class="subweb"><span class="trans">51CTO旗下网站</span><i></i>
+                <!--旗下网站-->
+                <div class="subweb-list" style="top: 37px;">
+                    <a href="//www.51cto.com" target="_blank">51CTO.COM</a>
+                    <a href="//www.cioage.com" target="_blank">CIOAge.COM</a>
+                    <a href="//www.hc3i.cn" target="_blank">HC3i.CN</a>
+                    <!--<a href="//zhijiapro.com/" target="_blank">zhijiapro.com</a>-->
+                </div>
+                <!--旗下网站-->
+            </div>
+        </div>
+        <div class="pdr10 fl">|</div>
+        <div class="pdr10 fl"><a href="//www.51cto.com/about/map.htm" target="_blank">地图</a></div>
+        <div class="pdr10 fl">|</div>
+        <div class="pdr10 fl">
+            <div class="subweb"><span class="trans">移动端</span><i></i>
+                <!--旗下网站-->
+                <div class="subweb-list sub_widthAuto" style="top: 37px;">
+                    <div class="navcodebox clearfix" style="width: 546px; display: block;top: 0; border-top: 0; left:-1px;">
+                        <span>
+                             <img src="https://s3.51cto.com/wyfs02/M02/97/8A/wKiom1kvkpKBgQFIAACDBen2-dg668.jpg" width="105" height="107" />
+                             <p>51CTO技术栈</p>
+                        </span>
+                        <span>
+                              <img src="https://s4.51cto.com/oss/201901/09/78634ceadba16b9b0f36c008b6929b97.jpg" width="105" height="107" />
+                              <p>51CTO播客</p>
+                        </span>
+                        <span>
+                              <img src="https://s5.51cto.com/oss/201902/25/7192b876ce86f586174664495c0a8f6f.jpg" width="107" height="107" />
+                              <p>51CTO服务号</p>
+                        </span>
+                        <span>
+                              <img src="https://s3.51cto.com/oss/201712/27/48594addc4b5eebf52a15bd51262ab23.jpg" width="107" height="107" />
+                              <p>CIO进化论</p>
+                        </span>
+                    </div>
+                </div>
+                <!--旗下网站-->
+            </div>
+        </div>
+        <div class="top-r">
+            <div id="login_status" style="text-align:right;" class="login"> </div>
+        </div>
+    </div>
+</div>
+<!-- top end -->
+<!-- 导航 结束-->
+
+<!-- 频道导航 -->
+<div class="top_bg">
+	<div class="wrap">
+		<div id="tonglanad" style="float:left;"></div>
+		<div id="list4" class="right" style="position:relative;">
+			<ul>
+				<li id="wordlinkad1"></li>
+				<li id="wordlinkad2"></li>
+				<li id="wordlinkad3"></li>
+				<li id="wordlinkad4"></li>
+			</ul>
+			<div style="right: 0px; width: 24px; height: 14px; z-index: 12; position: absolute; background: transparent url('https://s5.51cto.com/wyfs02/M00/86/BB/wKiom1fI4nWStYqXAAAEoZQn6vs942.png') repeat scroll 0% 0%; bottom: 2px;"></div>
+		</div>
+	</div>
+	<div class="nav">
+		<a href="http://www.51cto.com" class="logo"><img src="https://static3.51cto.com/51cto/cms/2016/images/nr_logo.png?v=0.1" alt=""></a>
+		<ul>
+			<li><a href="http://ai.51cto.com/" class="active">智能</a></li>
+			<li ><a href="http://ai.51cto.com/">首页</a></li>
+			<li id="col_1735"><a href="http://ai.51cto.com/">人工智能</a></li>
+			<li id="col_1736"><a href="http://ai.51cto.com/col/1736">深度学习</a></li>
+			<li id="col_1737"><a href="http://ai.51cto.com/col/1737">机器学习</a></li>
+			<li id="col_1738"><a href="http://ai.51cto.com/col/1738">神经网络</a></li>
+			<li id="col_1741"><a href="http://ai.51cto.com/col/1741">人脸识别</a></li>
+			<li id="col_1743"><a href="http://ai.51cto.com/col/1743">无人机</a></li>
+
+		</ul>
+		<div class="nav-rsear">
+			<form method="post" action="https://other.51cto.com/php/search.php" name="searchform" target="_blank">
+				<input name="keyword" id="q" type="text" placeholder="输入您要搜索的内容" class="sear-1">
+				<input name="" type="submit" value="" class="sear-2">
+			</form>
+		</div>
+	</div>
+</div>
+
+<!-- 频道导航结束 -->
+
+<div class="main">
+    <!-- 左侧内容 -->
+    <div class="main_left">
+        <div class="wznr">
+            <h2>使用TensorFlow构建LSTM模型详细教程</h2>
+            <p>本文的目标是解释一个可用于构建基本LSTM模型的简单代码。我不会讨论和分析结果。这只是为了让您开始编写代码。</p>
+            <dl>
+                <dt><span>作者：不靠谱的猫</span><span>来源：<a href='https://www.toutiao.com/i6594996471051846152/' target='_blank'>今日头条</a></span>|<em>2018-08-30 09:36</em></dt>
+                <dd>
+                	<div class="left" style="padding-right: 10px">
+                		<a href="javascript:favorBox('open');" title="一键收藏，随时查看，分享好友！" target="_self" class="bds_more1">&nbsp;收藏</a>
+                	</div>
+					<div class="bdsharebuttonbox left" data-tag="share_2">
+						<a href="javascript:;" class="bds_more" data-cmd="more">&nbsp;&nbsp;分享</a>
+					</div>
+                </dd>
+            </dl>
+        </div>
+        <div class="zwnr">
+            <!-- <h2><a href="http://mdsa.51cto.com/act/Tech/Tech24" target="_blank" style="text-decoration:none;">【51CTO技术沙龙】10月27日，让我们共同探索AI场景化应用实现之道</a></h2> -->
+            <p><h3 style="text-align: center;"><a href="https://s4.51cto.com/oss/201808/30/0a9003187e9db1257c953a2729322e4a.jpg-wh_651x-s_2696813827.jpg" target="_blank"><img src="https://s4.51cto.com/oss/201808/30/0a9003187e9db1257c953a2729322e4a.jpg-wh_651x-s_2696813827.jpg" width="auto" border="0" height="auto" alt="使用TensorFlow构建LSTM模型详细教程" title="使用TensorFlow构建LSTM模型详细教程" /></a></h3>
+<h3>目标</h3>
+<p>本文的目标是解释一个可用于构建基本LSTM模型的简单代码。我不会讨论和分析结果。这只是为了让您开始编写代码。</p>
+<h3>设置环境</h3>
+<p>我将在本文中使用python编写LSTM代码。环境设置如下：</p>
+<p>我建议您下载pycharm IDE并通过IDE将Tensorflow和所有其他库下载到您的项目中。您可以按照以下步骤设置环境。</p>
+<ul>
+    <li>下载PyCharm IDE</li>
+    <li>创建一个项目</li>
+    <li>将Tensorflow，NumPy，SciPy，scikit-learn和Pandas下载到您的项目中。</li>
+    <li>在项目中创建一个新的python文件</li>
+</ul>
+<p>如果您想手动创建环境，下面列出的是python和Tensorflow的兼容版本以及您需要遵循本文的所有其他库。</p>
+<p>注意：不要使用与提到的不同版本的python，因为它可能与给定的Tensorflow版本不兼容。下载scikit-learn时，首先下载NumPy和SciPy软件包。</p>
+<ul>
+    <li>Python: 3.6.5</li>
+    <li>Tensorflow: 1.9.0</li>
+    <li>scikit-learn: 0.19.1</li>
+    <li>Pip: 10.0.1</li>
+    <li>NumPy: 1.14.3</li>
+    <li>Pandas: 0.23.0</li>
+    <li>SciPy: 1.1.0</li>
+</ul>
+<h3>我们到底下载了什么？</h3>
+<ul>
+    <li>Tensorflow：这是一个机器学习框架。</li>
+    <li>Pandas：这是一个有助于分析和轻松完成数据准备的库。</li>
+    <li>scikit-learn：这是一个机器学习库，它具有各种机器学习算法，并且还执行必要的辅助函数。</li>
+    <li>NumPy：这是一个可以在多维数组和矩阵上执行高级数学函数的库。</li>
+    <li>SciPy：这是一个用于科学计算和技术计算的库。</li>
+    <li>Pip：这是一个Python的包管理系统，可以安装和管理用Python编写的软件包。</li>
+</ul>
+<h3>数据？</h3>
+<p>对于本文，我们将使用在kaggle上发布的信用卡欺诈数据集。我们将使用此数据集来训练我们的LSTM模型，以便对交易是欺诈性交易还是正常交易进行分类。</p>
+<p>您可以在此处(https://www.kaggle.com/mlg-ulb/creditcardfraud/version/2)获取数据集表单的csv文件。下载后，将其放入项目中以方便使用。如果您可以在开始使用数据之前浏览数据并阅读并理解每列数据所代表的内容，将会很有帮助。</p>
+<p>注意：如果您在机器学习算法（如&ldquo;随机森林分类器&rdquo;）上测试，此数据集将提供更好的分数，但我们可以使用此数据集作为构建LSTM模型的起点。此外，您应该记住，此数据集具有非常高的类不平衡。</p>
+<h3>Python代码</h3>
+<p>首先，让我们导入所需Python库。</p>
+<pre><ol class="dp-sql"><li class="alt"><span><span>import&nbsp;tensorflow&nbsp;</span><span class="keyword">as</span><span>&nbsp;tf&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>import&nbsp;pandas&nbsp;<span class="keyword">as</span><span>&nbsp;pd&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>import&nbsp;numpy&nbsp;<span class="keyword">as</span><span>&nbsp;np&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span><span class="keyword">from</span><span>&nbsp;tensorflow.contrib&nbsp;import&nbsp;rnn&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span><span class="keyword">from</span><span>&nbsp;sklearn.model_selection&nbsp;import&nbsp;train_test_split&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span><span class="keyword">from</span><span>&nbsp;sklearn.metrics&nbsp;import&nbsp;f1_score,&nbsp;accuracy_score,&nbsp;recall_score,&nbsp;precision_score&nbsp;</span></span>&nbsp;&nbsp;</li></ol></pre>
+<p>现在，我们必须将所有数据加载到我们的程序中。我们可以使用Pandas来做到这一点</p>
+<pre><ol class="dp-sql"><li class="alt"><span><span>data&nbsp;=&nbsp;pd.read_csv(</span><span class="string">'creditcard.csv'</span><span>,&nbsp;skiprows=[0],&nbsp;header=None)&nbsp;</span></span>&nbsp;</li></ol></pre>
+<p>上面的Python代码将加载来自csv文件的所有数据，从而省略带有标题的行，因此加载的数据现在看起来像这样：</p>
+<div class="pgc-img">
+<p style="text-align: center;"><img src="https://s1.51cto.com/oss/201808/30/dcc52afd780b87161669bee79d9804f2.jpeg" img_ img_ alt="机器学习：使用TensorFlow构建LSTM模型详细教程" inline="0" /></p>
+<p class="pgc-img-caption">前5行数据</p>
+</div>
+<p>接下来，我们将加载的数据分成标签和特征。</p>
+<pre><ol class="dp-sql"><li class="alt"><span><span>features&nbsp;=&nbsp;data.iloc[:,&nbsp;1:30]&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>labels&nbsp;=&nbsp;data.iloc[:,&nbsp;-1]&nbsp;</span>&nbsp;</li></ol></pre>
+<p>如果您浏览了信用卡数据，您会注意到其中有31列。第1行代码将数据从第1列(第0列)加载到第30列，作为&ldquo;特征&rdquo;。</p>
+<p>如kaggle所述，最后一列是指定交易是否存在欺诈行的列。因此，在第二行代码中，我们将最后一列中的数据作为标签加载。</p>
+<p>注意：我们正在排除第0列，因为它只提供有关交易顺序的信息，并没有为我们的训练增加实际价值。我们可以根据数据的发生顺序来保留数据的顺序。</p>
+<p>我们现在拥有标签和特征，我们需要将这些标签和特征划分为训练集和测试集。我们可以使用scikit-learn的'train test split function'。</p>
+<pre><ol class="dp-sql"><li class="alt"><span><span>X_train,X_test,y_train,y_test&nbsp;=&nbsp;train_test_split(features,&nbsp;labels,&nbsp;test_size=0.2,&nbsp;shuffle=</span><span class="keyword">False</span><span>,&nbsp;random_state=42)&nbsp;</span></span></li></ol></pre>
+
+<p>此功能自动将特征和标签分为测试和训练集。&ldquo;X_train&rdquo;和&ldquo;X_test&rdquo;是特征的训练和测试集，&ldquo;y_test&rdquo;和&ldquo;y_train&rdquo;是标签的训练和测试集。参数&ldquo;test_size&rdquo;指定测试集应该是整个数据集的20％。&ldquo;shuffle&rdquo;参数指定在将数据拆分为测试和训练集之前是否应该对数据进行混洗。这里我们将其设置为false以保留事务的发生顺序。我们使用&ldquo;random_state&rdquo;参数，以便每次运行此函数时获得相同的输出。</p>
+<p>我们现在要指定我们的超参数
+
+<pre><ol class="dp-sql"><li class="alt"><span><span>epochs&nbsp;=&nbsp;8&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>n_classes&nbsp;=&nbsp;1&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>n_units&nbsp;=&nbsp;200&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>n_features&nbsp;=&nbsp;29&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>batch_size&nbsp;=&nbsp;35&nbsp;</span></li></ol></pre>
+
+</p>
+<ul>
+    <li>epochs：epochs对应于我们将通过模型运行数据集的迭代次数。</li>
+    <li>n_classes：这对应于我们为此分类所做的类的数量。在我们的例子中，我们有一个二元分类，如果它是正常的事务我们分配0，如果它是欺诈性事务则分配1。在一个非常基础的层面，如果我们采用一列，我们可以非常容易地表示0和1的欺诈和正常交易。因此，我们可以将类的数量设为1。</li>
+    <li>n_units：这对应于LSTM隐藏状态的大小（c和h）。</li>
+    <li>n_features：如名称所指定，这表示数据集中的特征数。</li>
+    <li>batch_size：这是指您要输入模型的每批数据的大小。每批次将进行一次反向传播。</li>
+    <li>接下来，我们将为我们将要提供给机器学习模型的批数据定义place-holders。</li>
+</ul>
+<blockquote>
+
+<pre><ol class="dp-sql"><li class="alt"><span><span>xplaceholder=&nbsp;tf.placeholder(</span><span class="string">'float'</span><span>,[None,n_features])&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>yplaceholder&nbsp;=&nbsp;tf.placeholder(<span class="string">'float'</span><span>)&nbsp;</span></span></li></ol></pre>
+
+</blockquote>
+<p>'xplaceholder'占位符包含一批特征数据，'yplaceholder'包含相应批次的标签数据。'xplaceholder'的shape   已被指定为（&lt;batch_size&gt;，n_features），因为&ldquo;None&rdquo;值允许长度灵活到插入占位符的长度，但是fed矩阵应该具有代码中指定的相同数量的特征。由于没有为'yplaceholder'明确指定shape，它将是一个向量，但它的长度将取决于送入占位符的内容。在我们的例子中，y将是一个长度为batch_size的向量。</p>
+<p>我们已完成大部分准备工作，因此，我们现在将设计，训练和测试我们的LSTM模型</p>
+<blockquote>
+
+<pre><ol class="dp-sql"><li class="alt"><span><span>def&nbsp;recurrent_neural_network_model():&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>layer&nbsp;={&nbsp;<span class="string">'weights'</span><span>:&nbsp;tf.Variable(tf.random_normal([n_units,&nbsp;n_classes])),</span><span class="string">'bias'</span><span>:&nbsp;tf.Variable(tf.random_normal([n_classes]))}&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>x&nbsp;=&nbsp;tf.split(xplaceholder,&nbsp;n_features,&nbsp;1)&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>print(x)&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>lstm_cell&nbsp;=&nbsp;rnn.BasicLSTMCell(n_units)&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>outputs,&nbsp;states&nbsp;=&nbsp;rnn.static_rnn(lstm_cell,&nbsp;x,&nbsp;dtype=tf.float32)&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span><span class="keyword">output</span><span>&nbsp;=&nbsp;tf.matmul(outputs[-1],&nbsp;layer[</span><span class="string">'weights'</span><span>])&nbsp;+&nbsp;layer[</span><span class="string">'bias'</span><span>]&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span><span class="keyword">return</span><span>&nbsp;</span><span class="keyword">output</span><span>&nbsp;</span></span></li></ol></pre>
+
+</blockquote>
+<p>让我们理解代码。我将首先解释'recurrent_neural_network_model（）'函数内部的代码正在做什么，逐行解释Python代码如下：</p>
+<ol>
+    <li>在这一行中，我们手动定义权重和偏差的shapes。我们分别使用shape[rnn_size，n_classes]和[n_classes]的随机值赋予TensorFlow变量'weight'和'bias'。</li>
+    <li>现在我们将数据作为序列分配给'x'。为此，我们将特征批处理沿着它的垂直维度（维度：1）分成29个切片，这是一个二维张量。每个切片是作为LSTM层的输入给出的序列的元素。（序列的一个元素的形状将是：（&lt;batch_size&gt;，1））</li>
+    <li>然后我们正在创建LSTM层。该函数实例化所有门的变量。</li>
+    <li>'outputs'变量包含每个时间步长的LSTM层的所有输出，'state'包含两个隐藏状态（h和c）的最后状态的值。</li>
+    <li>这里我们只使用'outputs [-1]'获取LSTM层的最后一个输出，并将它与先前定义的权重矩阵相乘，并将偏差值添加到它。结果值是前向传播的logit值。</li>
+    <li>最后，我们将logit值返回给调用函数'train_neural_network（）'。</li>
+</ol>
+<blockquote>
+
+<pre><ol class="dp-sql"><li class="alt"><span><span>def&nbsp;train_neural_network():&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>#1&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>logit&nbsp;=&nbsp;recurrent_neural_network_model()&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>logit&nbsp;=&nbsp;tf.reshape(logit,&nbsp;[-1])&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>#3&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>cost&nbsp;=&nbsp;tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logit,&nbsp;labels=yplaceholder))&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>optimizer&nbsp;=&nbsp;tf.train.AdamOptimizer().minimize(cost)&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span><span class="keyword">with</span><span>&nbsp;tf.Session()&nbsp;</span><span class="keyword">as</span><span>&nbsp;sess:&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>#6&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>tf.global_variables_initializer().run()&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>tf.local_variables_initializer().run()&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>#7&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span><span class="keyword">for</span><span>&nbsp;epoch&nbsp;</span><span class="op">in</span><span>&nbsp;range(epochs):&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>epoch_loss&nbsp;=&nbsp;0&nbsp;#8&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>i&nbsp;=&nbsp;0&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span><span class="keyword">for</span><span>&nbsp;i&nbsp;</span><span class="op">in</span><span>&nbsp;range(</span><span class="keyword">int</span><span>(len(X_train)&nbsp;/&nbsp;batch_size)):&nbsp;#10&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>#11&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>start&nbsp;=&nbsp;i&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span><span class="keyword">end</span><span>&nbsp;=&nbsp;i&nbsp;+&nbsp;batch_size&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>#13&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>batch_x&nbsp;=&nbsp;np.array(X_train[start:<span class="keyword">end</span><span>])&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>batch_y&nbsp;=&nbsp;np.array(y_train[start:<span class="keyword">end</span><span>])&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>#15&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>_,&nbsp;c&nbsp;=&nbsp;sess.run([optimizer,&nbsp;cost],&nbsp;feed_dict={xplaceholder:&nbsp;batch_x,&nbsp;yplaceholder:&nbsp;batch_y})&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>epoch_loss&nbsp;+=&nbsp;c&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>i&nbsp;+=&nbsp;batch_size&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>#18&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>print(<span class="string">'Epoch'</span><span>,&nbsp;epoch,&nbsp;</span><span class="string">'completed&nbsp;out&nbsp;of'</span><span>,&nbsp;epochs,&nbsp;</span><span class="string">'loss:'</span><span>,&nbsp;epoch_loss)&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>pred&nbsp;=&nbsp;tf.round(tf.nn.sigmoid(logit)).eval({xplaceholder:&nbsp;np.array(X_test),&nbsp;yplaceholder:&nbsp;np.array(y_test)})&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>#20&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>f1&nbsp;=&nbsp;f1_score(np.array(y_test),&nbsp;pred,&nbsp;average=<span class="string">'macro'</span><span>)&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>accuracy=accuracy_score(np.array(y_test),&nbsp;pred)&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>recall&nbsp;=&nbsp;recall_score(y_true=np.array(y_test),&nbsp;y_pred=&nbsp;pred)&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span><span class="keyword">precision</span><span>&nbsp;=&nbsp;precision_score(y_true=np.array(y_test),&nbsp;y_pred=pred)&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>#24&nbsp;</span><span>&nbsp;</span></li><li class="alt"><span>print(<span class="string">&quot;F1&nbsp;Score:&quot;</span><span>,&nbsp;f1)&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>print(<span class="string">&quot;Accuracy&nbsp;Score:&quot;</span><span>,accuracy)&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>print(<span class="string">&quot;Recall:&quot;</span><span>,&nbsp;recall)&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>print(<span class="string">&quot;Precision:&quot;</span><span>,&nbsp;</span><span class="keyword">precision</span><span>)&nbsp;</span></span><span>&nbsp;</span></li><li class="alt"><span>train_neural_network()&nbsp;</span></li></ol></pre>
+
+</blockquote>
+<p>现在让我们了解'train_neural_network（）'函数中的代码是做什么的，逐行解释Python代码如下：</p>
+<ul>
+    <li>1.这里我们将接收的logit值分配给变量。logit值是激活的倒数。</li>
+    <li>2.然后我们将矩阵重reshaping 为一个向量，因为当将它提供给损失函数时，标签的shape和logits 应该相等。</li>
+    <li>3.我们在这里定义了损失函数。使用&ldquo;sigmoid_cross_entropy_with_logits&rdquo;函数是因为我们正在进行二元分类。如果这是一个多类分类，我们应该使用像'softmax_cross_entropy_with_logits'这样的损失函数。</li>
+    <li>4.我们使用&ldquo;AdamOptimizer（）&rdquo;优化器，因为它具有相当好的性能。</li>
+</ul>
+<p>直到这一点，我们讨论的所有代码都不在Tensorflow会话中。从这里开始，所有讨论的代码都将在TensorFlow会话中。</p>
+<p>在调用&ldquo;train_neural_network（）&rdquo;以启动程序之后，Tensorflow会话的起点将是执行开始的位置。</p>
+<p>我们正在初始化到目前为止我们已声明的所有全局变量。</p>
+<ul>
+    <li>6.然后我们正在初始化项目中的所有局部变量。</li>
+    <li>7.在这里，我们定义一个循环，直到满足我们定义的迭代次数（epoch）。</li>
+    <li>8.在每个epoch开始时将epoch loss重置为0。</li>
+    <li>9.定义变量以在将数据拆分为批次时跟踪开始和结束计算</li>
+    <li>10.在这里，我们再次定义一个循环，直到batches 达到计算阈值为止。</li>
+    <li>11.和12.我们使用'start'和'end'变量来跟踪数据在每次迭代中的分割位置。</li>
+    <li>13.和14.在每次迭代中，将分别为&ldquo;batch_x&rdquo;和&ldquo;batch_y&rdquo;变量分配一批特征和标签。</li>
+    <li>15.在这一行中，我们告诉Tensorflow运行必要的子图来计算优化器和成本，方法是将'batch_x'和'batch_y'变量中的值提供给前面提到的占位符。结果，将计算优化器的值和成本，并分别分配给&ldquo;throw-away&rdquo;变量和&ldquo;c&rdquo;变量。</li>
+    <li>16.当前批处理的损失将添加到&ldquo;epoch_loss&rdquo;变量中。</li>
+    <li>17.此行有助于遍历每批数据（特征和标签）。</li>
+    <li>18.打印那个epoch的总损失</li>
+</ul>
+<p>到目前为止我们讨论的是模型的训练方面。训练将持续到epochs数达到阈值。</p>
+<p>接下来的几行代码用于测试模型。</p>
+<p>注意：理想情况下，我们将数据集划分为3组，即训练，验证和测试。我们将保留测试集并使用验证集来查看模型的性能并更改超参数以实现更好的性能。当我们认为模型已经足够改进时，我们只会采用测试集来了解模型的表现。对于本文，我们只使用了两套训练集和测试集来保持简单。</p>
+<ul>
+    <li>19.这是我们将测试数据集提供给模型并告诉Tensorflow运行计算logit所需的子图的地方。然后我们通过sigmoid激活传递logit值来获得预测。四舍五入该值以删除预测值的小数位。</li>
+    <li>20.我们在这里计算F1得分。F1 Score是Precision和Recall的加权平均值。您可以从这里阅读更多相关信息。</li>
+    <li>21.然后我们计算准确度分数。</li>
+    <li>22.这次召回正在计算中。召回是正确预测的阳性观察与所有阳性观察的比率。</li>
+    <li>23.我们也在计算精度。精确度是正确预测的阳性观察值与总预测阳性观察值的比率。</li>
+    <li>24.至27.打印出所有计算得分。</li>
+</ul>
+<p>所以，我们终于完成了代码。</p>
+<p>我希望本文能帮助您了解使用Tensorflow构建基本LSTM的过程。请注意，此模型是一个非常基本的版本，是构建和改进的良好起点。</p><p>【编辑推荐】</p><div><ol><li><a href=http://ai.51cto.com/art/201808/581198.htm target='_blank'>机器学习项目失败的9个原因，你中招了吗？</a></li><li><a href=http://news.51cto.com/art/201808/581355.htm target='_blank'>甲骨文宣布开源 GraphPipe，一种机器学习模型的新标准</a></li><li><a href=http://bigdata.51cto.com/art/201808/581371.htm target='_blank'>Python数据分析基础：异常值检测和处理</a></li><li><a href=http://zhuanlan.51cto.com/art/201808/582077.htm target='_blank'>不！机器学习才不只是统计学的美化！</a></li><li><a href=http://zhuanlan.51cto.com/art/201808/582265.htm target='_blank'>这么多机器学习的应用场景，金融领域到底有何不同？</a></li></ol></div><DIV align=right>【责任编辑：<A class=ln href="mailto:sunsj@51cto.com">庞桂玉</A> TEL：（010）68476606】</DIV><br>
+            <a href="###" class="dzdz zhan abc" target="_self">点赞 <span>0</span></a>
+        </div>
+        <div class="share5">
+            <ul>
+                <li><a href='http://www.51cto.com/php/search.php?keyword=%B1%E0%B3%CC%D3%EF%D1%D4' target='_blank' class='underline'>编程语言</a>&nbsp;&nbsp;<a href='http://www.51cto.com/php/search.php?keyword=Python' target='_blank' class='underline'>Python</a>&nbsp;&nbsp;<a href='http://www.51cto.com/php/search.php?keyword=%BB%FA%C6%F7%D1%A7%CF%B0' target='_blank' class='underline'>机器学习</a></li>
+            </ul>
+            <dl>
+                <dt><em>分享:</em>
+<div class="bdsharebuttonbox" data-tag="share_1">
+    <a class="wb" data-cmd="tsina"></a>
+    <a class="wx" data-cmd="weixin"></a>
+    <a class="more" data-cmd="more"></a>
+</div>
+</dt>
+<script type="text/javascript">
+    window._bd_share_config = {
+        common : {
+            bdText : document.title
+        },
+        share : [{
+            "bdSize" : 16,
+        }]
+    }
+    with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='https://static1.51cto.com/51cto/cms/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+<!-- Baidu Button END -->
+            </dl>
+        </div>
+        <div class="nrdp comment">
+            <script>
+	$(function(){
+		var host = window.location.host;
+		var domain_prefix = host.replace(/\.51cto\.com/, '');
+		function appendRecommend(){
+			$(".share5").prepend("<div id='c21148bdd1e7483e87966a00982902d4'></div>");
+		}
+		if(domain_prefix == 'developer') {
+			appendRecommend();
+			ParadigmSDKv3.init("dcde33d0dc6845609e9cb47f754d1094");
+			ParadigmSDKv3.renderArticle('c21148bdd1e7483e87966a00982902d4',346,605);
+		}
+	})
+</script>
+<div class='comment center'>
+	<div class='inner center' id="cmscmt_iframe"></div>
+</div>
+<script type="text/javascript" id="UYScript" src="//comment.51cto.com/static/js/api_js/iframe_cmt.js" async=""></script>
+
+        </div>
+        <div class="dzk">
+            <dl><dt class="show">大家都在看</dt><dt>猜你喜欢</dt></dl>
+            <div>
+                <ul>
+                    <li class="show">
+                        <div class="djdzk" id="djdzk">
+                        </div>
+                    </li>
+                    <li>
+                       <div class="djdzk" id="cnxh"></div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!-- 文章左侧结束 -->
+    <!-- 文章右侧 -->
+    <div class="wrap_right">
+        <div><!-- intel广告位 -->
+
+<span class="mtgg" id="right1_ad" style="height:auto; width:300px;margin-bottom: 10px;">
+
+<script type="text/javascript">
+var s=window.location.toString();
+var s1=s.substr(7,s.length);
+var s2=s1.indexOf(".");
+s=s.substr(7,s2);
+if ( s == 'stor') {
+    var m3_u = (location.protocol=='https:'?'https://gg.51cto.com/www/delivery/ajs.php':'http://gg1.51cto.com/www/delivery/ajs.php');
+    var m3_r = Math.floor(Math.random()*99999999999);
+    if (!document.MAX_used) document.MAX_used = ',';
+    document.write ("<scr"+"ipt type='text/javascript' src='"+m3_u);
+    document.write ("?zoneid=987");
+    document.write ('&amp;cb=' + m3_r);
+    if (document.MAX_used != ',') document.write ("&amp;exclude=" + document.MAX_used);
+    document.write (document.charset ? '&amp;charset='+document.charset : (document.characterSet ? '&amp;charset='+document.characterSet : ''));
+    document.write ("&amp;loc=" + escape(window.location));
+    if (document.referrer) document.write ("&amp;referer=" + escape(document.referrer));
+    if (document.context) document.write ("&context=" + escape(document.context));
+    if (document.mmm_fo) document.write ("&amp;mmm_fo=1");
+    document.write ("'><\/scr"+"ipt>");
+
+}else if (s == 'server'){
+    var m3_u = (location.protocol=='https:'?'https://gg.51cto.com/www/delivery/ajs.php':'http://gg1.51cto.com/www/delivery/ajs.php');
+    var m3_r = Math.floor(Math.random()*99999999999);
+    if (!document.MAX_used) document.MAX_used = ',';
+    document.write ("<scr"+"ipt type='text/javascript' src='"+m3_u);
+    document.write ("?zoneid=1061");
+    document.write ('&amp;cb=' + m3_r);
+    if (document.MAX_used != ',') document.write ("&amp;exclude=" + document.MAX_used);
+    document.write (document.charset ? '&amp;charset='+document.charset : (document.characterSet ? '&amp;charset='+document.characterSet : ''));
+    document.write ("&amp;loc=" + escape(window.location));
+    if (document.referrer) document.write ("&amp;referer=" + escape(document.referrer));
+    if (document.context) document.write ("&context=" + escape(document.context));
+    if (document.mmm_fo) document.write ("&amp;mmm_fo=1");
+    document.write ("'><\/scr"+"ipt>");
+
+}else if(s == 'network'){
+    var m3_u = (location.protocol=='https:'?'https://gg.51cto.com/www/delivery/ajs.php':'http://gg1.51cto.com/www/delivery/ajs.php');
+    var m3_r = Math.floor(Math.random()*99999999999);
+    if (!document.MAX_used) document.MAX_used = ',';
+    document.write ("<scr"+"ipt type='text/javascript' src='"+m3_u);
+    document.write ("?zoneid=985");
+    document.write ('&amp;cb=' + m3_r);
+    if (document.MAX_used != ',') document.write ("&amp;exclude=" + document.MAX_used);
+    document.write (document.charset ? '&amp;charset='+document.charset : (document.characterSet ? '&amp;charset='+document.characterSet : ''));
+    document.write ("&amp;loc=" + escape(window.location));
+    if (document.referrer) document.write ("&amp;referer=" + escape(document.referrer));
+    if (document.context) document.write ("&context=" + escape(document.context));
+    if (document.mmm_fo) document.write ("&amp;mmm_fo=1");
+    document.write ("'><\/scr"+"ipt>");
+
+//    var str = '<div class="m30" style="position:relative;">';
+//    str += '<iframe src="http://network.51cto.com/act/cisco/art201709" scrolling="no" frameborder="0" sytle="" width="300" align="middle" height="360" target ="_parent"></iframe>';
+//    str +='<div style="left: 0px; width: 24px; height: 14px; z-index: 12; position: absolute; background: transparent url(http://s5.51cto.com/wyfs02/M00/86/BB/wKiom1fI4nWStYqXAAAEoZQn6vs942.png)repeat scroll 0% 0%; bottom: 2px;"></div>';
+//    str	+= '</div>';
+//    $('#right1_ad').html(str);
+}
+// var timestamp = Date.parse(new Date());
+//timestamp = timestamp / 1000;
+    if (s == 'cloud') {
+//    var str = "<ins class='dcmads' style='display:inline-block;width:300px;height:360px' data-dcm-placement='N5751.51CTO/B11527656.153459357' data-dcm-rendering-mode='script' data-dcm-http-only data-dcm-app-id=''></ins>";
+//
+//        $('#right1_ad').html(str);
+        //1496592000
+        var m3_u = (location.protocol=='https:'?'https://gg.51cto.com/www/delivery/ajs.php':'http://gg3.51cto.com/www/delivery/ajs.php');
+        var m3_r = Math.floor(Math.random()*99999999999);
+        if (!document.MAX_used) document.MAX_used = ',';
+        document.write ("<scr"+"ipt type='text/javascript' src='"+m3_u);
+        document.write ("?zoneid=969");
+        document.write ('&amp;cb=' + m3_r);
+        if (document.MAX_used != ',') document.write ("&amp;exclude=" + document.MAX_used);
+        document.write (document.charset ? '&amp;charset='+document.charset : (document.characterSet ? '&amp;charset='+document.characterSet : ''));
+        document.write ("&amp;loc=" + escape(window.location));
+        if (document.referrer) document.write ("&amp;referer=" + escape(document.referrer));
+        if (document.context) document.write ("&context=" + escape(document.context));
+        if (document.mmm_fo) document.write ("&amp;mmm_fo=1");
+        document.write ("'><\/scr"+"ipt>");
+    }
+    if (s == 'bigdata') {
+        var m3_u = (location.protocol=='https:'?'https://gg.51cto.com/www/delivery/ajs.php':'http://gg2.51cto.com/www/delivery/ajs.php');
+        var m3_r = Math.floor(Math.random()*99999999999);
+        if (!document.MAX_used) document.MAX_used = ',';
+        document.write ("<scr"+"ipt type='text/javascript' src='"+m3_u);
+        document.write ("?zoneid=970");
+        document.write ('&amp;cb=' + m3_r);
+        if (document.MAX_used != ',') document.write ("&amp;exclude=" + document.MAX_used);
+        document.write (document.charset ? '&amp;charset='+document.charset : (document.characterSet ? '&amp;charset='+document.characterSet : ''));
+        document.write ("&amp;loc=" + escape(window.location));
+        if (document.referrer) document.write ("&amp;referer=" + escape(document.referrer));
+        if (document.context) document.write ("&context=" + escape(document.context));
+        if (document.mmm_fo) document.write ("&amp;mmm_fo=1");
+        document.write ("'><\/scr"+"ipt>");
+    }
+//var timestamp = Date.parse(new Date());
+//timestamp = timestamp / 1000;
+//    if(s == 'netsecurity'&& (timestamp >= 1506182400)){
+//        var str = '<div class="m30" style="position:relative;">';
+//    str += '<iframe src="http://netsecurity.51cto.com/act/cisco/art201709" scrolling="no" frameborder="0" sytle="" width="300" align="middle" height="360" target ="_parent"></iframe>';
+//    str +='<div style="left: 0px; width: 24px; height: 14px; z-index: 12; position: absolute; background: transparent url(http://s5.51cto.com/wyfs02/M00/86/BB/wKiom1fI4nWStYqXAAAEoZQn6vs942.png)repeat scroll 0% 0%; bottom: 2px;"></div>';
+//    str	+= '</div>';
+//    $('#right1_ad').html(str);
+//    }
+</script>
+    <!--<script src='https://www.googletagservices.com/dcm/dcmads.js'></script>-->
+    </span></div>
+        <div class="mtgg m30"><script type="text/javascript" src="//image.51cto.com/ad/art/hzh/ad.js"></script></div>
+        <div><!--推荐系统start-->
+<script charset="utf-8" id="ParadigmSDKv3" src="https://nbrecsys.4paradigm.com/sdk/js/ParadigmSDK_v3.js"></script>
+<style>
+    .article-box{margin-bottom: 20px;}
+</style>
+<div id='279ee0c8d3f94395a91a27085384c3b9'></div>
+<script>
+    $(function(){
+        var host = window.location.host;
+        var domain_prefix = host.replace(/\.51cto\.com/, '');
+        ParadigmSDKv3.init("dcde33d0dc6845609e9cb47f754d1094");
+        if(domain_prefix == 'developer'){
+            ParadigmSDKv3.renderArticle('279ee0c8d3f94395a91a27085384c3b9',346,682);
+        }else{
+            ParadigmSDKv3.renderArticle('279ee0c8d3f94395a91a27085384c3b9',269,460);
+        }
+    })
+</script>
+<!--推荐系统end-->
+</div>
+        <div class="bjtj m30">
+            <h2><span>编辑推荐</span></h2>
+            <dl><dt>头条</dt><dd><a href="http://ai.51cto.com/art/201906/597600.htm" title="医生正在利用深度学习算法帮助患者治疗癌症">医生正在利用深度学习算法帮助患者治疗癌症</a></dd></dl><dl><dt>关注</dt><dd><a href="http://ai.51cto.com/art/201906/597506.htm" title="19个人工智能(AI)热门应用领域，你知道多少？">19个人工智能(AI)热门应用领域，你知道多少？</a></dd></dl><dl><dt>热点</dt><dd><a href="http://ai.51cto.com/art/201905/597291.htm" title="看完这篇报告，你的人工智能常识就基本没问题了">看完这篇报告，你的人工智能常识就基本没问题了</a></dd></dl><dl><dt>头条</dt><dd><a href="http://ai.51cto.com/art/201905/597182.htm" title="人工智能在心理健康方面的四项应用">人工智能在心理健康方面的四项应用</a></dd></dl><dl><dt>头条</dt><dd><a href="http://ai.51cto.com/art/201905/597242.htm" title="自动驾驶方案供应商如何使用高精地图？">自动驾驶方案供应商如何使用高精地图？</a></dd></dl>
+        </div>
+        <div></div>
+        <div class="news m30">
+            <dl><dt class="show">24H热文</dt><dt>一周话题</dt><dt>本月最赞</dt></dl>
+            <ul><li class="show"><a href=http://news.51cto.com/art/201906/597971.htm title=历数中国AI芯“觉醒”的五年>历数中国AI芯“觉醒”的五年</a><a href=http://ai.51cto.com/art/201808/580965.htm title=人工智能主要分为哪几个研究阶段，未来的发展方向是什么>人工智能主要分为哪几个研究阶段，未来的发展方向是什么</a><a href=http://news.51cto.com/art/201906/597957.htm title=Adobe研发AI工具 可以自动发现被PS的人类面部>Adobe研发AI工具 可以自动发现被PS的人类面部</a><a href=http://cloud.51cto.com/art/201803/568537.htm title=终于有人把云计算、大数据和人工智能讲明白了！>终于有人把云计算、大数据和人工智能讲明白了！</a><a href=http://ai.51cto.com/art/201906/597906.htm title=掌握这十大机器学习方法，你就是圈子里最靓的崽>掌握这十大机器学习方法，你就是圈子里最靓的崽</a><a href=http://ai.51cto.com/art/201808/582409.htm title=使用TensorFlow构建LSTM模型详细教程>使用TensorFlow构建LSTM模型详细教程</a><a href=http://mdsa.51cto.com/art/201707/545995.htm title=CVPR 2017论文解读：特征金字塔网络FPN>CVPR 2017论文解读：特征金字塔网络FPN</a><a href=http://ai.51cto.com/art/201807/578543.htm title=超实用的图像超分辨率重建技术原理与应用>超实用的图像超分辨率重建技术原理与应用</a></li><li><a href=http://ai.51cto.com/art/201808/580965.htm title=人工智能主要分为哪几个研究阶段，未来的发展方向是什么>人工智能主要分为哪几个研究阶段，未来的发展方向是什么</a><a href=http://ai.51cto.com/art/201905/596548.htm title=图像识别没你想的那么难！看完这篇你也能成专家>图像识别没你想的那么难！看完这篇你也能成专家</a><a href=http://ai.51cto.com/art/201906/597796.htm title=程序员开发原谅宝，以防“老实人接盘”？>程序员开发原谅宝，以防“老实人接盘”？</a><a href=http://ai.51cto.com/art/201906/597747.htm title=可解释的人工智能：4个关键行业>可解释的人工智能：4个关键行业</a><a href=http://cloud.51cto.com/art/201803/568537.htm title=终于有人把云计算、大数据和人工智能讲明白了！>终于有人把云计算、大数据和人工智能讲明白了！</a><a href=http://ai.51cto.com/art/201807/578543.htm title=超实用的图像超分辨率重建技术原理与应用>超实用的图像超分辨率重建技术原理与应用</a><a href=http://mdsa.51cto.com/art/201707/545995.htm title=CVPR 2017论文解读：特征金字塔网络FPN>CVPR 2017论文解读：特征金字塔网络FPN</a><a href=http://ai.51cto.com/art/201808/582409.htm title=使用TensorFlow构建LSTM模型详细教程>使用TensorFlow构建LSTM模型详细教程</a></li><li><a href=http://ai.51cto.com/art/201711/559441.htm title=一文搞懂RNN（循环神经网络）基础篇>一文搞懂RNN（循环神经网络）基础篇</a><a href=http://ai.51cto.com/art/201905/596548.htm title=图像识别没你想的那么难！看完这篇你也能成专家>图像识别没你想的那么难！看完这篇你也能成专家</a><a href=http://ai.51cto.com/art/201808/580965.htm title=人工智能主要分为哪几个研究阶段，未来的发展方向是什么>人工智能主要分为哪几个研究阶段，未来的发展方向是什么</a><a href=http://ai.51cto.com/art/201712/561112.htm title=为什么大家都不戳破深度学习的本质？！>为什么大家都不戳破深度学习的本质？！</a><a href=http://ai.51cto.com/art/201807/578543.htm title=超实用的图像超分辨率重建技术原理与应用>超实用的图像超分辨率重建技术原理与应用</a><a href=http://mdsa.51cto.com/art/201707/545995.htm title=CVPR 2017论文解读：特征金字塔网络FPN>CVPR 2017论文解读：特征金字塔网络FPN</a><a href=http://ai.51cto.com/art/201808/582409.htm title=使用TensorFlow构建LSTM模型详细教程>使用TensorFlow构建LSTM模型详细教程</a><a href=http://cloud.51cto.com/art/201803/568537.htm title=终于有人把云计算、大数据和人工智能讲明白了！>终于有人把云计算、大数据和人工智能讲明白了！</a></li></ul>
+        </div>
+        <div><div class="areaAd mt5" id="ad_1"></div>
+<div style="display:none">
+<span id="ad1">
+
+<script type='text/javascript'><!--//<![CDATA[
+var m3_u = (location.protocol=='https:'?'https://gg.51cto.com/www/delivery/ajs.php':'http://gg3.51cto.com/www/delivery/ajs.php');
+var m3_r = Math.floor(Math.random()*99999999999);
+if (!document.MAX_used) document.MAX_used = ',';
+document.write ("<scr"+"ipt type='text/javascript' src='"+m3_u);
+document.write ("?zoneid=693");
+document.write ('&amp;cb=' + m3_r);
+if (document.MAX_used != ',') document.write ("&amp;exclude=" + document.MAX_used);
+document.write (document.charset ? '&amp;charset='+document.charset : (document.characterSet ? '&amp;charset='+document.characterSet : ''));
+document.write ("&amp;loc=" + escape(window.location));
+if (document.referrer) document.write ("&amp;referer=" + escape(document.referrer));
+if (document.context) document.write ("&context=" + escape(document.context));
+if (document.mmm_fo) document.write ("&amp;mmm_fo=1");
+document.write ("'><\/scr"+"ipt>");
+//]]>--></script><noscript><a href='//gg2.51cto.com/www/delivery/ck.php?n=ae95ac07&amp;cb=INSERT_RANDOM_NUMBER_HERE' target='_blank'><img src='//gg.51cto.com/www/delivery/avw.php?zoneid=693&amp;cb=INSERT_RANDOM_NUMBER_HERE&amp;n=ae95ac07' border='0' alt='' /></a></noscript>
+</span>
+    </div>
+<script>
+    document.getElementById('ad_1').innerHTML = document.getElementById('ad1').innerHTML;
+</script></div>
+        <!--订阅专栏 start-->
+        <div class="spkc m30">
+            <h2><span>订阅专栏</span><a href="//blog.51cto.com/cloumn/index?utm_source=www">+更多</a></h2>
+            
+            <dl>
+                <dt><a href="?utm_source=ai_detail"><img src="" title="" alt="" width="100px" height="95px"></a><span style="background: url('')"></span></dt>
+                <dd>
+                    <h3 style="font-weight: bolder;"><a href="?utm_source=ai_detail" target="_blank" title=""></a></h3>
+                    <div style="font-size: 14px;"><span class=""></span></div>
+                    <div style="font-size: 14px;"><span class="">共章</span> | <span class=""></span></div>
+                    <h4 style="font-size: 13px;padding-top: 3px;"><span class=""><em></em>人订阅学习</span></h4>
+                </dd>
+            </dl>
+            
+            <dl>
+                <dt><a href="?utm_source=ai_detail"><img src="" title="" alt="" width="100px" height="95px"></a><span style="background: url('')"></span></dt>
+                <dd>
+                    <h3 style="font-weight: bolder;"><a href="?utm_source=ai_detail" target="_blank" title=""></a></h3>
+                    <div style="font-size: 14px;"><span class=""></span></div>
+                    <div style="font-size: 14px;"><span class="">共章</span> | <span class=""></span></div>
+                    <h4 style="font-size: 13px;padding-top: 3px;"><span class=""><em></em>人订阅学习</span></h4>
+                </dd>
+            </dl>
+            
+        </div>
+        <!--订阅专栏 end-->
+        <div class="spkc m30">
+            <h2><span>视频课程</span><a href="https://edu.51cto.com/">+更多</a></h2>
+            
+            <dl>
+                <dt><a href="http://edu.51cto.com/course/course_id-15146.html"><img src="https://s11.51cto.com/images/201812/28/fc21bbe5975f28b5f0a90a65ef2dc6f4.png?x-oss-process=image/resize,m_fixed,h_94,w_124" title="MYSQL主从复制偏运维全实战视频教程" alt="MYSQL主从复制偏运维全实战视频教程" width="100px" height="80px"></a><span></span></dt>
+                <dd>
+                    <h3><a href="http://edu.51cto.com/course/course_id-15146.html" target="_blank" title="MYSQL主从复制偏运维全实战视频教程">MYSQL主从复制偏运维全实战视频教程</a></h3>
+                    <h4><span class="fl">讲师：<em><a href="http://edu.51cto.com/lecturer/user_id-8808431.html" target="_blank">实践哥</a></em></span><span class="fr"><em>10012</em>人学习过</span></h4>
+                </dd>
+            </dl>
+            
+            <dl>
+                <dt><a href="http://edu.51cto.com/course/course_id-16363.html"><img src="https://s11.51cto.com/images/201812/31/623f08d42824dbbee8650e1dca71835e.png?x-oss-process=image/resize,m_fixed,h_94,w_124" title="企业级负载均衡+高可用性实战视频教程" alt="企业级负载均衡+高可用性实战视频教程" width="100px" height="80px"></a><span></span></dt>
+                <dd>
+                    <h3><a href="http://edu.51cto.com/course/course_id-16363.html" target="_blank" title="企业级负载均衡+高可用性实战视频教程">企业级负载均衡+高可用性实战视频教程</a></h3>
+                    <h4><span class="fl">讲师：<em><a href="http://edu.51cto.com/lecturer/user_id-8808431.html" target="_blank">实践哥</a></em></span><span class="fr"><em>2692</em>人学习过</span></h4>
+                </dd>
+            </dl>
+            
+            <dl>
+                <dt><a href="http://edu.51cto.com/course/course_id-13207.html"><img src="https://s11.51cto.com/images/201812/28/73cadc7055b7ceb9cbf29558cb7de249.png?x-oss-process=image/resize,m_fixed,h_94,w_124" title="企业级Docker入门实战视频教程 多进程容器" alt="企业级Docker入门实战视频教程 多进程容器" width="100px" height="80px"></a><span></span></dt>
+                <dd>
+                    <h3><a href="http://edu.51cto.com/course/course_id-13207.html" target="_blank" title="企业级Docker入门实战视频教程 多进程容器">企业级Docker入门实战视频教程 多进程容器</a></h3>
+                    <h4><span class="fl">讲师：<em><a href="http://edu.51cto.com/lecturer/user_id-8808431.html" target="_blank">实践哥</a></em></span><span class="fr"><em>15376</em>人学习过</span></h4>
+                </dd>
+            </dl>
+            
+        </div>
+        <div id="zxf0309" class="fl m30">
+            <div class="Central_bank  mb20">
+                <div class="titall">
+                    <a href="//club.51cto.com/act/cto/caff?51CTOQ" class="zlmore" target="_blank">+ 更多</a>
+                    <div class="mintitall">
+                        <span class="cur">CTO品牌</span>
+                    </div>
+                </div>
+                <div class="jp-list"  >
+                    <div class="rmzw_xx">
+                        <ul>
+                            <li><span class="ico"></span><a href="http://siliconvalley2018.mikecrm.com/qMTa1RQ" target="_blank">CTO训练营-新CTO进化论，申请入营</a></li>
+        
+                            <li><span class="ico"></span><A href="http://siliconvalley2018.mikecrm.com/RGszRhY" target="_blank">线上社群，仅限技术管理者免费申请</A></li>
+                        </ul>
+                    </div>
+                    <dl class="ctoll clearfix">
+                    <dt><a href="http://x.51cto.com?51ctoQ" target="_blank"><span style="color:#BE0000">CTO训练营</span></a></dt>
+                    <dd>
+                           <A href="http://x.51cto.com/act/cto/camp/page/enroll" target="_blank">申请入营&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</A>
+                           <A href="http://x.51cto.com/act/cto/camp/page/course_list/cid/83?51ctoQ" target="_blank">互联网班&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</A>
+                           <A href="http://x.51cto.com/act/cto/camp/page/course_list/cid/98?51ctoQ" target="_blank">金融班</A>
+                    </dd>
+                  </dl>
+                   <dl class="ctoll clearfix">
+                    <dt><a href="http://club.51cto.com?51ctoQ" target="_blank"><span style="color:#BE0000">CTO俱乐部</span></a></dt>
+                    <dd>
+                         <A href="http://club.51cto.com/act/cto/caff/page/member-notice?51ctoQ" target="_blank">199元加入&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</A>                          
+                          <A href="http://club.51cto.com/act/cto/caff/page/activity-list" target="_blank">最新活动&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</A>
+<A href="http://club.51cto.com/act/cto/caff/page/year-list?51ctoQ" target="_blank">全部课程</A>
+                                              </dd>
+                  </dl>
+                   
+    </div>
+            </div>
+        </div>
+        <div></div>
+        <div></div>
+        <div class="zxzt m30">
+            <h2><span>最新专题</span><a href="http://www.51cto.com/tag/specials">+更多</a></h2>
+            <dl>
+                <dt><a href="http://ai.51cto.com/art/201806/576779.htm" title="透过场景实例浅析前端技术应用"><img src="https://s2.51cto.com/oss/201806/21/ceed11e65d8948d0bb0695ce344499df.jpg-wh_100x70-s_3670296059.jpg" alt="透过场景实例浅析前端技术应用" title="透过场景实例浅析前端技术应用"></a></dt>
+                <dd>
+                    <a href="http://ai.51cto.com/art/201806/576779.htm" title="透过场景实例浅析前端技术应用">透过场景实例浅析前端技术应用</a>
+                    <h3><a href='https://www.51cto.com/php/search.php?keyword=%C7%B0%B6%CB%2F%BC%BC%CA%F5%2F%B3%A1%BE%B0'>前端/技术/场景</a></h3>
+                </dd>
+            </dl><dl>
+                <dt><a href="http://ai.51cto.com/art/201806/576767.htm" title="新零售新在哪？浅析新零售背后的核心技术"><img src="https://s1.51cto.com/oss/201806/21/221a615aa1be1117b4cbc3ce3aa23a35.jpg-wh_100x70-s_2136436209.jpg" alt="新零售新在哪？浅析新零售背后的核心技术" title="新零售新在哪？浅析新零售背后的核心技术"></a></dt>
+                <dd>
+                    <a href="http://ai.51cto.com/art/201806/576767.htm" title="新零售新在哪？浅析新零售背后的核心技术">新零售新在哪？浅析新零售背后的核心技术</a>
+                    <h3><a href='https://www.51cto.com/php/search.php?keyword=%D0%C2%C1%E3%CA%DB%2F%BA%CB%D0%C4%BC%BC%CA%F5'>新零售/核心技术</a></h3>
+                </dd>
+            </dl><dl>
+                <dt><a href="http://ai.51cto.com/art/201805/574605.htm" title="运维的下一幕思考：基于实际场景的AIOps实践解析"><img src="https://s3.51cto.com/oss/201805/25/8fc897687e0243de105a355969380af6.jpg-wh_100x70-s_3236379558.jpg" alt="运维的下一幕思考：基于实际场景的AIOps实践解析" title="运维的下一幕思考：基于实际场景的AIOps实践解析"></a></dt>
+                <dd>
+                    <a href="http://ai.51cto.com/art/201805/574605.htm" title="运维的下一幕思考：基于实际场景的AIOps实践解析">运维的下一幕思考：基于实际场景的AIOps实践解析</a>
+                    <h3><a href='https://www.51cto.com/php/search.php?keyword=%D4%CB%CE%AC%2F%CB%BC%BF%BC%2FAIOps'>运维/思考/AIOps</a></h3>
+                </dd>
+            </dl><dl>
+                <dt><a href="http://ai.51cto.com/art/201804/571557.htm" title="插上AI翅膀 运维平台焕发出崭新生命力"><img src="https://s5.51cto.com/oss/201804/25/8a4fee84cdfa027cf98bc3fa3c60498d.jpg-wh_100x70-s_388401342.jpg" alt="插上AI翅膀 运维平台焕发出崭新生命力" title="插上AI翅膀 运维平台焕发出崭新生命力"></a></dt>
+                <dd>
+                    <a href="http://ai.51cto.com/art/201804/571557.htm" title="插上AI翅膀 运维平台焕发出崭新生命力">插上AI翅膀 运维平台焕发出崭新生命力</a>
+                    <h3><a href='https://www.51cto.com/php/search.php?keyword='></a></h3>
+                </dd>
+            </dl>
+        </div>
+        <div></div>
+        <div id="jcpl"></div>
+        <div></div>
+        <div class="news m30">
+            <dl><dt class="show">精选博文</dt><dt>论坛热帖</dt><dt>下载排行</dt></dl>
+            <div>
+                <ul>
+                    <li class="show">
+                        
+                    </li>
+                    <li>
+                        <a href="http://bbs.51cto.com/thread-1544397-1.html" target="_blank" title="《服务器硬件工程师从入门到精通》－（1）基础篇课件下载【陆续更新中…】">《服务器硬件工程师从入门到精通》－</a><a href="http://bbs.51cto.com/thread-1548202-1.html" target="_blank" title="Server 2012 部署DHCP服务器,在线终端PC保留地址名称自动更改成主机hostname名">Server 2012 部署DHCP服务器,在线终</a><a href="http://bbs.51cto.com/thread-1548261-1.html" target="_blank" title="超融合详细对比：市面各主流超融合产品及厂商优劣势解密">超融合详细对比：市面各主流超融合产</a><a href="http://bbs.51cto.com/thread-1548679-1.html" target="_blank" title="【有奖】大公司 VS 小公司，节后跳槽到底该怎么选？">【有奖】大公司 VS 小公司，节后跳槽</a><a href="http://bbs.51cto.com/thread-1548985-1.html" target="_blank" title="软考之路：备考心得与答题技巧分享">软考之路：备考心得与答题技巧分享</a>
+                    </li>
+                    <li>
+                        <a href="http://down.51cto.com/data/34987/" target="_blank" title=".NET开发人员职业技能蓝图">.NET开发人员职业技能蓝图</a><a href="http://down.51cto.com/data/34986/" target="_blank" title="【黄皮书】体验Visual Studio 2008的魅力（系列一）">【黄皮书】体验Visual Studio 2008的</a><a href="http://down.51cto.com/data/34985/" target="_blank" title="微软Visual Studio 2008概述的白皮书">微软Visual Studio 2008概述的白皮书</a><a href="http://down.51cto.com/data/34984/" target="_blank" title="Asp.net实用案例教程">Asp.net实用案例教程</a><a href="http://down.51cto.com/data/34983/" target="_blank" title="Beginning.Visual.C.Sharp.2005.Nov.2005">Beginning.Visual.C.Sharp.2005.Nov.</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div></div>
+        <div class="ds m30">
+            <h2><span>读 书 </span><a href="//book.51cto.com/">+更多</a></h2>
+            <dl>
+                
+                <dt><a href="http://book.51cto.com/art/200707/51807.htm" title="嬴在用户：Web人物角色创建和应用实践指南"><img src="https://images.51cto.com/files/uploadimg/20070720/094750702.gif" width="98px" height="144px"/></a></dt>
+                <dd><h3><a href="http://book.51cto.com/art/200707/51807.htm" title="嬴在用户：Web人物角色创建和应用实践指南">嬴在用户：Web人物角色创建和应用实践指南</a></h3>
+                    您如何保证您的网站确实给予用户他们所需要的，并对您产生商业成果？您需要了解谁是您的用户，您的用户的目标、行为和观点是什么，还要把他...
+                </dd>
+                
+            </dl>
+        </div>
+        <div></div>
+        <div class="dydy" style="margin-bottom:30px;">
+            <dl>
+                <dt><img src="https://static1.51cto.com/51cto/cms/2016/images/dydy.jpg" alt=""></dt>
+                <dd>
+                    <h3>订阅51CTO邮刊</h3>
+                    <h4><a href="//news.51cto.com/col/1323/">点击这里查看样刊</a></h4>
+                    <a href="//home.51cto.com/index.php?s=/Subscribe"><img src="https://static4.51cto.com/51cto/cms/2016/images/ljdy.jpg" alt="订阅51CTO邮刊"></a>
+                </dd>
+            </dl>
+        </div>
+        <div class="clearfix" style="text-align:center;padding-top:15px">
+
+            <span style="float:left;margin-right: 5px;border:1px solid #e5e5e5;">
+                <img src="https://s5.51cto.com/oss/201902/25/7192b876ce86f586174664495c0a8f6f.jpg" width="100" height="100" style="padding:6px 6px 0;">
+                <p style=" font-size:14px; color:#666; height:30px; line-height:30px;">51CTO服务号</p>
+            </span>
+
+            <span style=" float:left; margin-right:3px; border:1px solid #e5e5e5;">
+                <img src="https://s4.51cto.com/oss/201901/09/78634ceadba16b9b0f36c008b6929b97.jpg" width="100" height="100" style="padding:6px 6px 0;">
+                <p style=" font-size:14px; color:#666; height:30px; line-height:30px;">51CTO播客</p>
+            </span>
+        </div>
+        <div></div>
+    </div>
+    <!-- 文章右侧结束 -->
+    </div>
+<div class="footer_nav">
+   <div class="wrap">
+       <h2>51CTO旗下网站：</h2>
+       <a href="//www.51cto.com">领先的IT技术网站 51CTO</a>|<a href="//cio.51cto.com">中国专业CIO网站 CIOage </a>|
+       <a href="//www.hc3i.cn">中国数字医疗领军网站 HC3i</a>
+       <!--|<a href="//zhijiapro.com/">区块链聚合媒体 zhijiapro</a>-->
+   </div>
+</div>
+<div id="ft"><div id="foot" align="center"><script src="https://www.51cto.com/images/copy_right/copy_right.js?v=0.96"></script></div></div>
+<div class="clk"><a class="ewm" href="###" target="_self"><img src="https://s5.51cto.com/wyfs02/M01/9B/36/wKiom1lfV4XgxZ3zAADAK8-_E6k046.jpg" style="display: none;"></a><a class="yjk" href="#comment" target="_self"></a><a class="topx" href="#topx" target="_self"></a></div>
+<script>
+    $('.zwnr img').each(function(i,e){if($(e)[0].clientWidth > 651) {$(e).css("width", "650px")}})
+    $(function(){
+        var host = window.location.host;
+        document.getElementById('cnxh').style.display = '';
+    });
+    var $$ = function(func){
+        if (document.addEventListener) {
+            window.addEventListener("load", func, false);
+        }
+        else if (document.attachEvent) {
+            window.attachEvent("onload", func);
+        }
+    };
+
+    $$(function(){
+        show();
+    });
+    var show = function(){
+        var aa = $('#cmscmt_iframe dl').html();
+        setTimeout(function(){
+            $("[data-track]").live("click", function() {
+                if (aa.indexOf('uid') > -1) {
+                    var label = $(this).data("track") + '-login';
+                } else {
+                    var label = $(this).data("track") + '-not-login';
+                }console.log(label);
+                window._hmt && window._hmt.push(['_trackEvent', label, 'click']);
+
+            });
+        }, 3000);
+    }
+
+</script>
+<script src="https://logs.51cto.com/rizhi/count/count.js"></script>
+
+<!-- 学院广告位 -->
+
+<!--<div id="edu_adver">-->
+    <!--<div class="aderbox">-->
+        <!--<span class="educlose">×</span>-->
+        <!--<a href="//edu.51cto.com/activity/6.html?qd=CMSzuoce"><img src="https://s5.51cto.com/oss/201712/05/94601626f864124ca789425588a5a1f5.jpg" width="100" height="300" alt="51CTO学院双十二活动" title="51CTO学院双十二活动"></a>-->
+    <!--</div>-->
+<!--</div>-->
+<style type="text/css">
+    #edu_adver{position:fixed; top:240px; left:50%; margin-left:-623px; width:100px; height:300px; border:1px solid #c4c4c6;}
+    #edu_adver .aderbox{position:relative;}
+    #edu_adver  .educlose{position:absolute; right:6px; top:6px; background:#655c4d; color:#fff; font-size:12px;  display:inline-block; width:13px; height:13px; text-align:center; line-height:13px; cursor:pointer;}
+</style>
+<script>
+    $('#edu_adver .educlose').click(function () {
+        $("#edu_adver").hide();
+    });
+    var s=window.location.toString();
+    var s1=s.substr(7,s.length);
+    var s2=s1.indexOf(".");
+    s=s.substr(7,s2);
+    if(s=="stor"||s=="server"||s=="network"||s=="virtual"){
+        $("#edu_adver").hide();
+    }
+    if (s=="stor"||s=="server"||s=="network"||s=="virtual") {
+        //$('.aderbox').find('a')[0].href = '';
+        //$('.aderbox').find('img')[0].src = 'https://s2.51cto.com/oss/201711/01/507eecf589ca025c76a3aff2dfc1fcc4.jpg';
+    }
+</script>
+<!-- <script src="//home.51cto.com/iframe/iframe-member-adv?www"></script> -->
+<!--数据统计-->
+<script>
+    //ParadigmSDKv3.init("dcde33d0dc6845609e9cb47f754d1094");
+    $(function(){
+        if(domain_prefix == 'developer') {
+            ParadigmSDKv3.trackDetailPageShow(346);
+        }else{
+            ParadigmSDKv3.trackDetailPageShow(269);
+        }
+    })
+</script>
+<script>
+    var host = window.location.host;
+    var domain_prefix = host.replace(/\.51cto\.com/, '');
+    var nowTime = new Date().getTime();
+    //get start time and end
+    var startTime1 = 0;
+    var endTime1 = 0;
+    var startTime2 = 0;
+    var endTime2 = 0;
+    var startTime3 = 0;
+    var endTime3 = 0;
+    var startTime4 = 0;
+    var endTime4 = 0;
+    var startTime5 = 0;
+    var endTime5 = 0;
+    var adContent = '';
+    if(domain_prefix == 'cloud'){
+        startTime1 = new Date('2018/08/31 00:00:00').getTime();
+        endTime1 = new Date('2018/08/31 23:59:59').getTime();
+
+        startTime2 = new Date('2018/09/05 00:00:00').getTime();
+        endTime2 = new Date('2018/09/07 23:59:59').getTime();
+
+        startTime3 = new Date('2018/09/12 00:00:00').getTime();
+        endTime3 = new Date('2018/09/13 23:59:59').getTime();
+
+        startTime4 = new Date('2018/09/19 00:00:00').getTime();
+        endTime4 = new Date('2018/09/20 23:59:59').getTime();
+
+        startTime5 = new Date('2018/09/25 00:00:00').getTime();
+        endTime5 = new Date('2018/09/26 23:59:59').getTime();
+        if((nowTime > startTime1 && nowTime < endTime1) || (nowTime > startTime2 && nowTime < endTime2) || (nowTime > startTime3 && nowTime < endTime3) || (nowTime > startTime4 && nowTime < endTime4) || (nowTime > startTime5 && nowTime < endTime5)){
+            adContent = "<iframe src=\"http://cloud.51cto.com/act/IBM/201808ad\" frameborder=\"0\" width=\"300px\" height=\"250px\" scrolling=\"no\"></iframe>";
+            changeAd();
+        }
+    }else if(domain_prefix == 'bigdata'){
+        startTime1 = new Date('2018/08/31 00:00:00').getTime();
+        endTime1 = new Date('2018/08/31 23:59:59').getTime();
+
+        startTime2 = new Date('2018/09/04 00:00:00').getTime();
+        endTime2 = new Date('2018/09/04 23:59:59').getTime();
+
+        startTime3 = new Date('2018/09/10 00:00:00').getTime();
+        endTime3 = new Date('2018/09/10 23:59:59').getTime();
+
+        startTime4 = new Date('2018/09/17 00:00:00').getTime();
+        endTime4 = new Date('2018/09/17 23:59:59').getTime();
+
+        startTime5 = new Date('2018/09/27 00:00:00').getTime();
+        endTime5 = new Date('2018/09/27 23:59:59').getTime();
+        if((nowTime > startTime1 && nowTime < endTime1) || (nowTime > startTime2 && nowTime < endTime2) || (nowTime > startTime3 && nowTime < endTime3) || (nowTime > startTime4 && nowTime < endTime4) || (nowTime > startTime5 && nowTime < endTime5)){
+            adContent = "<iframe src=\"http://cloud.51cto.com/act/IBM/201808ad2\" frameborder=\"0\" width=\"300px\" height=\"250px\" scrolling=\"no\"></iframe>";
+            changeAd();
+        }
+    }
+    function changeAd(){
+        //add new
+        $("div.mtgg").after(adContent);
+        //move some block to left
+        var adBox = $("div.mtgg");
+        $(".zwnr p:first").before(adBox);
+        $("div.mtgg").css('margin-top', '7px');
+        $("div.mtgg").css('margin-right', '10px');
+
+    }
+</script>
+
+<script type="text/javascript">var artid = 582409</script>
+<script src='//home.51cto.com/index.php?s=/Index/getLoginStatus2015/reback/http%253A%252F%252Fai.51cto.com%252Fart%252F201808%252F582409.htm' charset="utf-8"></script>
+<script type="text/javascript" src="https://static4.51cto.com/51cto/cms/2016/js/article.js?v=1.0"></script>
+<script type="text/javascript" src="https://static3.51cto.com/51cto/cms/2016/js/article_ajax.js?v=2.5"></script>
+<script src="//other.51cto.com/php/count.php?view=yes&artID=582409" type="text/javascript"></script>
+<script type="text/javascript" src="//home.51cto.com/apps/favorite/Tpl/default/Public/js/favorbox.js"></script>
+<!--  一大波JS来袭 -->
+<div id="MyMoveAd" style="display:none">
+    <span id="pinglun"><script type="text/javascript" src="//other.51cto.com/php/getArtCount.php?artid=582409&type=all"></script></span>
+	<span id="tonglan"><script type="text/javascript" src="//image.51cto.com/ad/art/tonglan/ad.js"></script></span>
+	<span id="wordlink_1"><script src="//image.51cto.com/ad/art/wordlink/wordlink1.js"></script></span>
+	<span id="wordlink_2"><script src="//image.51cto.com/ad/art/wordlink/wordlink2.js"></script></span>
+	<span id="wordlink_3"><script src="//image.51cto.com/ad/art/wordlink/wordlink3.js"></script></span>
+	<span id="wordlink_4"><script src="//image.51cto.com/ad/art/wordlink/wordlink4.js"></script></span>
+	<span id="wordlink"><script  src="//image.51cto.com/ad/art/wordlink/ad.js"></script></span>
+</div>
+<script type="text/javascript">
+var thistid=582409;
+//收藏按钮
+var favor_url = 'http://ai.51cto.com/art/201808/582409.htm';
+var favor_title = '使用TensorFlow构建LSTM模型详细教程';  
+document.getElementById('tonglanad').innerHTML=document.getElementById('tonglan').innerHTML;
+</script>
+<!-- 结束 -->
+</body>
+</html>

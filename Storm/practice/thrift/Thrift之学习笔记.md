@@ -220,7 +220,7 @@ thrift —gen java hello.thrift
 
 ![thrift生成的java代码文件](images/thrift生成的java代码文件.png)
 
-然后将Hello.java和world.java移动到java项目的thrift代码文件夹下。并删除resources/gen-java目录。如果使用IDEA编译器，且安装了.thrift文件解析器则会发现Hello.thrift问价中的各数据已经被实现：
+然后将Hello.java和world.java移动到java项目的thrift代码文件夹下。并删除resources/gen-java目录。如果使用IDEA编译器，且安装了.thrift文件解析器则会发现Hello.thrift文件中的各数据已经被实现：
 
 ![正确匹配代码后的thrift文件](images/正确匹配代码后的thrift文件.png)
 

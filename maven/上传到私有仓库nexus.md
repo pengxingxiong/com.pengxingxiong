@@ -31,7 +31,85 @@ clean package
 ```
 ## 上传命令
 idea编译器：deploy
+
+##scala配置
+
+如果是scala代码的话，比较麻烦些
+
+```shell
+clean validate scala:compile deploy -f pom.xml
+```
+
+如果在末尾追加`-U`命令，则表示不使用本地的缓存，从远程重新拉取。
+
+其pom的配置为
+
+```xml
+<build>
+  <plugins>
+    <!--jdk编译版本-->
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <configuration>
+        <source>8</source>
+        <target>8</target>
+        <encoding>UTF8</encoding>
+      </configuration>
+    </plugin>
+    <!--上传到Nexus时生成source包-->
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-source-plugin</artifactId>
+      <executions>
+        <execution>
+          <id>attach-sources</id>
+          <goals>
+            <goal>jar</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+    <!--scala加入包-->
+    <plugin>
+      <groupId>net.alchim31.maven</groupId>
+      <artifactId>scala-maven-plugin</artifactId>
+      <executions>
+        <execution>
+          <id>scala-compile-first</id>
+          <phase>process-resources</phase>
+          <goals>
+            <goal>add-source</goal>
+            <goal>compile</goal>
+          </goals>
+        </execution>
+        <execution>
+          <id>scala-test-compile</id>
+          <phase>process-test-resources</phase>
+          <goals>
+            <goal>testCompile</goal>
+          </goals>
+        </execution>
+      </executions>
+      <configuration>
+        <scalaVersion>${scala.version}</scalaVersion>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+<distributionManagement>
+  <repository>
+    <id>RGONC-Host-Releases</id>
+    <name>RGONC Release Repository</name>
+    <url>http://nexus.mig.ruijie.net:8081/nexus/content/repositories/RGONC-Host-Releases/</url>
+  </repository>
+</distributionManagement>
+```
+
+
+
 ## 重复上传
+
 当再次上传相同版本的包时，需要到仓库中删除原有包
 例如上面配置中的：http://10.206.19.205:8081/nexus
 选中jar包，然后删除即可再次上传。
