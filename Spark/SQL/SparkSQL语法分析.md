@@ -1,12 +1,6 @@
----
-title: SparkSQL语法分析
-date: 2018-10-23 13:58:15
-tags: spark
----
+> created by pengxingxiong
 
 介绍SparkSQL的较为复杂的语法以及操作
-
-<!--more-->
 
 # DataFrame & array
 
@@ -185,3 +179,4 @@ print("readDataTime = %s" % (endTime - startTime))
 ![2](assets/2.png)
 
 在相同的资源条件下，方式一明显用时超过了方式二。而从scala版本的udf来看，使用方式一也是没有shuffle过程的。
+

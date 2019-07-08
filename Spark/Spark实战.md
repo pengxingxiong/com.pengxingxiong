@@ -82,7 +82,7 @@ Dataset的定义中还提到了DataFrame，DataFrame是特殊的Dataset，它在
 **RDD**
 
 ```python
-def rddWordCount():
+def rdd_word_count():
     sc = SparkContext(master="local[*]", appName="rddTest")
     lines = sc.textFile("e:/data/sparkcredits.txt")
     counts = lines.flatMap(lambda x: x.split(' ')) \
@@ -98,14 +98,13 @@ def rddWordCount():
 方式一：
 
 ```python
-def dfWordCount():
-    spark = SparkSession \
-        .builder \
-        .appName("pengxxPythonTestShuffle") \
-        .getOrCreate()
+def df_word_count():
+    spark = SparkSession.builder \
+        .appName("pengxxPythonTestShuffle").getOrCreate()
     lines = spark.read.text("e:/data/sparkcredits.txt")
     words = lines.select(explode(split(lines.value, " ")).alias("word"))
-    wordCountDF = words.groupBy(['word']).count().orderBy("count", ascending=False)
+    wordCountDF = words.groupBy(['word']).count()
+                       .orderBy("count", ascending=False)
     wordCountDF.show()
 ```
 
@@ -113,14 +112,13 @@ def dfWordCount():
 
 ```python
 def dfWordCount():
-    spark = SparkSession \
-        .builder \
-        .appName("pengxxPythonTestShuffle") \
-        .getOrCreate()
+    spark = SparkSession.builder \
+        .appName("pengxxPythonTestShuffle").getOrCreate()
     lines = spark.read.text("e:/data/sparkcredits.txt")
     words = lines.select(explode(split(lines.value, " ")).alias("word"))
     words.createTempView("wordCount")
-    spark.sql("select word, count(word) from wordCount group by word order by count(word) desc").show()
+    spark.sql("select word, count(word) from wordCount \
+              group by word order by count(word) desc").show()
 ```
 
 最后结果为：
@@ -161,16 +159,16 @@ DataSet代码暂时不支持python语言，仅支持Scala和Java。因此给出S
 object datasetTest {
   case class Person(_id: String, label: Double, features: String)
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().master("local[*]").appName("MongoDBLoadbyDF").getOrCreate()
+    val spark = SparkSession.builder().master("local[*]")
+                 .appName("MongoDBLoadbyDF").getOrCreate()
     val database = "ion"
     val table = "test"
     val df = spark.read.format("com.mongodb.spark.sql").
-      option("uri", "mongodb://172.18.135.11:26000,172.18.135.12:26000,172.18.135.13:26000").
+      option("uri", "mongodb://172.18.135.11:26000").
       option("database", database).
       option("collection", table).load()
     import spark.implicits._ //隐式转换
     val ds = df.as[Person]
-    ds.printSchema()
     val person = ds.collect()(0)// 使用DataSet，获取Person对象
     println(person.label,person._id,person.features)
     val personRow = df.collect()(0)// 使用DataSet，获取Row对象
@@ -202,7 +200,9 @@ SparkSQL基本都是在DataFrame上实现的。包括使用SQL语句和API两种
 ```python
 words  # type: DataFrame
 words.createTempView("wordCount")
-spark.sql("select word, count(word) from wordCount group by word order by count(word) desc").show(10, False)
+spark.sql("select word, count(word) from wordCount \
+           group by word order by count(word) desc")
+     .show(10, False)
 ```
 
 通过`createTempView()`函数在DataFrame上创建一个临时的试图，类似于在数据库中一个具体的表上创建一个试图；然后使用`spark.sql()`就可以使用SQL语句了。实际上Spark会将SQL语句解析为各种API函数。
@@ -253,7 +253,8 @@ return data
 ```python
 tableFilter = [{'$match': {'outOctetsReAvg': 16}}]
 orgDF = spark.read.format(MONGODB_DRIVER) \
-        .options(uri=MONGODB_URI, database="ion", collection="outLineSumInfo",                          pipeline=tableFilter)
+        .options(uri=MONGODB_URI, database="ion", collection="outLineSumInfo", \
+                 pipeline=tableFilter)
         .load()
 orgDF.printSchema()
 orgDF.show(5, False)
@@ -426,4 +427,125 @@ IO监控信息：
 ![1540789604746](assets/1540789604746.png)
 
 在IO监控图中，可以看出Spark-ML运行时不是一开始就读（mongodb）写(shuffle)数据，而是在算法需要的时候才全部读入。同时也揭示了，sparkML算法在算法结束后时分区写入。
+
+# 常见问题
+
+## 找不到localhost
+
+如果是在本地运行，可能报如下错误：
+
+Invalid Spark URL: spark://HeartbeatReceiver@windows10.microdone.cn127.0.0.1:9982，即该错误并不是使用localhost地址创建UI进程。需要做如下变更：
+
+```scala
+val conf = new SparkConf().setMaster("local[2]").setAppName("KyroTest")
+conf.set("spark.driver.host", "localhost")
+```
+
+## 内存不足
+
+内存不足一般出现在Shuffle操作时，主要是集中在Driver进程，因此尽量给Driver更多的内存。
+
+```scala
+val conf = new SparkConf().setMaster("local[2]").setAppName("KyroTest")
+conf.set("spark.driver.memory", "4g")
+```
+
+## 使用spark-shell做分布式测试
+
+和使用spark-submit相似
+
+```shell
+${SPARK_HOME}/bin/spark-shell \
+--master spark://172.18.135.131:7077 \
+--conf spark.executor.memory=1536m \
+--conf spark.executor.cores=2
+```
+
+上面命令会进入一个分布式的spark-shell界面：
+
+```shell
+2019-07-02 17:12:16 WARN  NativeCodeLoader:62 - Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+Spark context Web UI available at http://rgibns3:4040
+Spark context available as 'sc' (master = spark://172.18.135.131:7077, app id = app-20190702171229-0002).
+Spark session available as 'spark'.
+Welcome to
+      ____              __
+     / __/__  ___ _____/ /__
+    _\ \/ _ \/ _ `/ __/  '_/
+   /___/ .__/\_,_/_/ /_/\_\   version 2.3.1
+      /_/
+         
+Using Scala version 2.11.8 (Java HotSpot(TM) 64-Bit Server VM, Java 1.8.0_181)
+Type in expressions to have them evaluated.
+Type :help for more information.
+
+scala> 
+```
+
+该命令行界面，可以使用sc和spark。
+
+测试代码：
+
+把spark的README.md文件上传到hdfs
+
+```scala
+val line = sc.textFile("hdfs://172.18.135.131:9000/user/spark/pengxx/README.md")
+val result = line.flatMap(_.split(" ")).map((_, 1)).reduceByKey(_ + _).sortBy(_._2, ascending = false).collect
+```
+
+Scala退出shell窗口
+
+```shell
+:q
+```
+
+可以发现存在以下现象：
+
+![1562058855001](assets/1562058855001.png)
+
+![1562058875900](assets/1562058875900.png)
+
+可以发现虽然规定了每个Executor只能使用2个CPU核，但是因为默认一个应用是使用全部CPU核，所以会自动创建四个Executor。因此建议限制该APP的总CPU使用数。
+
+```shell
+${SPARK_HOME}/bin/spark-shell \
+--master spark://172.18.135.131:7077 \
+--conf spark.executor.memory=1536m \
+--conf spark.executor.cores=2 \
+--conf spark.cores.max=4
+```
+
+再次执行命令则存在以下正常现象：
+
+![1562059268086](assets/1562059268086.png)
+
+![1562059275905](assets/1562059275905.png)
+
+注意，如果查看Executor详情界面，请使用谷歌内核的浏览方式。
+
+![1562059286177](assets/1562059286177.png)
+
+查看Shuffle文件：
+
+```shell
+find /tmp/spark* -type f ! -name "*.class"
+```
+
+在该命令中，查找在/tmp目录下以spark字符开头的所有文件，但不包含class文件。由于Spark默认情况是基于排序的Shuffle写操作，因此在Executor所在的节点下会有data文件和index文件。
+
+```shell
+root@rgibns3:~# find /tmp/spark* -type f ! -name "*.class"
+/tmp/spark-e881d099-8101-4071-86ca-fd567b8fafc6/executor-1387c117-693e-4a66-9683-efa6a04301cb/blockmgr-1cdcffae-40c6-4c83-bf9e-15e164581a0e/15/shuffle_0_1_0.data
+/tmp/spark-e881d099-8101-4071-86ca-fd567b8fafc6/executor-1387c117-693e-4a66-9683-efa6a04301cb/blockmgr-1cdcffae-40c6-4c83-bf9e-15e164581a0e/0f/shuffle_0_1_0.index
+/tmp/spark-e881d099-8101-4071-86ca-fd567b8fafc6/executor-1387c117-693e-4a66-9683-efa6a04301cb/blockmgr-1cdcffae-40c6-4c83-bf9e-15e164581a0e/32/shuffle_1_1_0.index
+/tmp/spark-e881d099-8101-4071-86ca-fd567b8fafc6/executor-1387c117-693e-4a66-9683-efa6a04301cb/blockmgr-1cdcffae-40c6-4c83-bf9e-15e164581a0e/0a/shuffle_1_1_0.data
+```
+
+如果想看基于哈希的Shuffle，则需要配置一下
+
+```shell
+--conf spark.shuffle.manager=hash
+```
 

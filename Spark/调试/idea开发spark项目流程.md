@@ -99,7 +99,7 @@
 
     <build>
         <plugins>
-
+						<!-- 让maven扫描到Scala代码 -->
             <plugin>
                 <groupId>org.scala-tools</groupId>
                 <artifactId>maven-scala-plugin</artifactId>
